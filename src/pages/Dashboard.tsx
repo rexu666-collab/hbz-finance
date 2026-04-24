@@ -96,8 +96,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">
             Hoş geldiniz, {user?.email?.split('@')[0] || 'Kullanıcı'}
           </p>
         </div>
@@ -163,8 +163,8 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Asset Distribution */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm card-hover">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Varlık Dağılımı</h3>
+        <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Varlık Dağılımı</h3>
           {pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={220}>
@@ -195,7 +195,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-3 justify-center mt-2">
                 {pieData.map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  <div key={entry.name} className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-slate-400">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                     <span>{entry.name}</span>
                   </div>
@@ -210,8 +210,8 @@ export default function Dashboard() {
         </div>
 
         {/* Net Worth Trend */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm card-hover">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Net Varlık Trendi</h3>
+        <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Net Varlık Trendi</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={netWorthHistory}>
               <defs>
@@ -239,9 +239,9 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Transactions */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm card-hover">
+      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Son İşlemler</h3>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Son İşlemler</h3>
           <span className="text-xs text-slate-400">Son 5 işlem</span>
         </div>
         <div className="space-y-2">
@@ -254,7 +254,7 @@ export default function Dashboard() {
             recentTransactions.map((tx, index) => (
               <div 
                 key={tx.id} 
-                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors slide-in"
+                className="flex items-center justify-between p-3 rounded-xl bg-gray-100 dark:bg-slate-700/50 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors slide-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-center gap-3">
@@ -268,8 +268,8 @@ export default function Dashboard() {
                      <Activity size={16} />}
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-slate-900 dark:text-white">{tx.description || tx.accounts?.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{tx.transaction_date}</p>
+                    <p className="font-medium text-sm text-gray-800 dark:text-white">{tx.description || tx.accounts?.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">{tx.transaction_date}</p>
                   </div>
                 </div>
                 <span className={`font-semibold text-sm ${
@@ -291,12 +291,12 @@ export default function Dashboard() {
 
 function SummaryCard({ icon, label, value, gradient }: { icon: React.ReactNode; label: string; value: string; gradient: string }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm card-hover">
+    <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
       <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white mb-3 shadow-lg`}>
         {icon}
       </div>
-      <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
-      <p className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{value}</p>
+      <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
+      <p className="text-lg font-bold text-gray-800 dark:text-white mt-0.5">{value}</p>
     </div>
   );
 }

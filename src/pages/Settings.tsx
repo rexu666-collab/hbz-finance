@@ -23,8 +23,8 @@ export default function Settings() {
   return (
     <div className="space-y-6 max-w-2xl fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Ayarlar</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Uygulama tercihlerinizi yönetin</p>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Ayarlar</h1>
+        <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">Uygulama tercihlerinizi yönetin</p>
       </div>
 
       {message && (
@@ -35,46 +35,46 @@ export default function Settings() {
       )}
 
       {/* Profile */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3 mb-5">
           <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
             <User size={20} />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white">Profil</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white">Profil</h3>
             <p className="text-xs text-slate-500">Hesap bilgileriniz</p>
           </div>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">E-posta</label>
+            <label className="block text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">E-posta</label>
             <input 
               type="email" 
               value={user?.email || ''} 
               disabled 
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 text-slate-500 cursor-not-allowed text-sm"
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-700 text-slate-500 cursor-not-allowed text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Kullanıcı ID</label>
+            <label className="block text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">Kullanıcı ID</label>
             <input 
               type="text" 
               value={user?.id || ''} 
               disabled 
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 text-slate-500 cursor-not-allowed text-xs font-mono"
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-700 text-slate-500 cursor-not-allowed text-xs font-mono"
             />
           </div>
         </div>
       </div>
 
       {/* Theme */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3 mb-5">
           <div className="p-2.5 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
             <Palette size={20} />
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900 dark:text-white">Tema</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-white">Tema</h3>
             <p className="text-xs text-slate-500">Arayüz görünümünü özelleştirin</p>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function Settings() {
               className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                 theme === t.value
                   ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400'
+                  : 'border-gray-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400'
               }`}
             >
               {t.icon}
@@ -96,32 +96,32 @@ export default function Settings() {
           ))}
         </div>
         <p className="mt-3 text-sm text-slate-500">
-          Aktif tema: <span className="font-medium text-slate-900 dark:text-white capitalize">{resolvedTheme}</span>
+          Aktif tema: <span className="font-medium text-gray-800 dark:text-white capitalize">{resolvedTheme}</span>
         </p>
       </div>
 
       {/* About */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
             <Info size={20} />
           </div>
-          <h3 className="font-semibold text-slate-900 dark:text-white">HBZ Finance Hakkında</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-white">HBZ Finance Hakkında</h3>
         </div>
-        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+        <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
           Kişisel finans yönetim uygulamanız. Banka hesapları, kredi kartları, krediler, döviz, altın ve yatırım fonlarınızı tek bir yerden takip edin.
         </p>
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-lg font-bold text-slate-900 dark:text-white">1.0</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-white">1.0</p>
             <p className="text-xs text-slate-500">Versiyon</p>
           </div>
           <div>
-            <p className="text-lg font-bold text-slate-900 dark:text-white">Supabase</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-white">Supabase</p>
             <p className="text-xs text-slate-500">Veritabanı</p>
           </div>
           <div>
-            <p className="text-lg font-bold text-slate-900 dark:text-white">Vercel</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-white">Vercel</p>
             <p className="text-xs text-slate-500">Hosting</p>
           </div>
         </div>

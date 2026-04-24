@@ -45,7 +45,7 @@ export default function Navigation({ isBottom = false, onNavigate }: { isBottom?
             `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
               isActive
                 ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-800 dark:hover:text-white'
             }`
           }
         >
