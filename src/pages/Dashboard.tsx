@@ -163,7 +163,7 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Asset Distribution */}
-        <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Varlık Dağılımı</h3>
           {pieData.length > 0 ? (
             <>
@@ -210,7 +210,7 @@ export default function Dashboard() {
         </div>
 
         {/* Net Worth Trend */}
-        <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Net Varlık Trendi</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={netWorthHistory}>
@@ -239,7 +239,7 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Transactions */}
-      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
+      <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Son İşlemler</h3>
           <span className="text-xs text-slate-400">Son 5 işlem</span>
@@ -254,7 +254,7 @@ export default function Dashboard() {
             recentTransactions.map((tx, index) => (
               <div 
                 key={tx.id} 
-                className="flex items-center justify-between p-3 rounded-xl bg-gray-100 dark:bg-slate-700/50 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors slide-in"
+                className="flex items-center justify-between p-3 rounded-xl bg-gray-200 dark:bg-slate-700/50 hover:bg-gray-300 dark:hover:bg-slate-700 transition-colors slide-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-center gap-3">
@@ -291,7 +291,7 @@ export default function Dashboard() {
 
 function SummaryCard({ icon, label, value, gradient }: { icon: React.ReactNode; label: string; value: string; gradient: string }) {
   return (
-    <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
+    <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-4 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
       <div className={`inline-flex p-2.5 rounded-xl bg-gradient-to-br ${gradient} text-white mb-3 shadow-lg`}>
         {icon}
       </div>

@@ -89,7 +89,14 @@ export default function Funds() {
         current_price: data.price,
       });
     } catch (err: any) {
-      alert('Otomatik güncelleme başarısız: ' + err.message + '\n\nManuel güncelleme yapabilirsiniz.');
+      // Otomatik çekme başarısız olursa TEFAS sayfasını aç
+      const tefasUrl = `https://www.tefas.gov.tr/FonAnaliz.aspx?FonKodu=${encodeURIComponent(uf.fund_code)}`;
+      window.open(tefasUrl, '_blank', 'noopener,noreferrer');
+      alert(
+        `"${uf.fund_code}" fonu için otomatik fiyat çekilemedi.\n\n` +
+        `TEFAS sayfası yeni sekmede açıldı.\n` +
+        `Lütfen "Son Fiyat" değerini kopyalayıp "Manuel" butonu ile güncelleyin.`
+      );
     } finally {
       setAutoUpdating(null);
     }
@@ -152,7 +159,7 @@ export default function Funds() {
       {/* Funds List */}
       <div className="space-y-4">
         {userFunds?.length === 0 ? (
-          <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 border-dashed text-center py-16">
+          <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed text-center py-16">
             <TrendingUp size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
             <p className="text-gray-500 dark:text-gray-400">Henüz fon eklemediniz</p>
             <button onClick={() => setAddModalOpen(true)} className="mt-4 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium">
@@ -168,7 +175,7 @@ export default function Funds() {
             const isProfit = profit >= 0;
 
             return (
-              <div key={uf.id} className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm card-hover">
+              <div key={uf.id} className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -219,7 +226,7 @@ export default function Funds() {
                     </button>
                     <button
                       onClick={() => { setSelectedFund(uf); setNewPrice(uf.current_price.toString()); setUpdateModalOpen(true); }}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
                     >
                       <RefreshCw size={14} />
                       <span>Manuel</span>
@@ -254,14 +261,14 @@ export default function Funds() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 placeholder="Kod veya isim ile arayın (örn: AFT, MAC, TTE)"
               />
             </div>
           </div>
 
           {searchQuery && (
-            <div className="max-h-56 overflow-y-auto border border-gray-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700">
+            <div className="max-h-56 overflow-y-auto border border-gray-300 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-700">
               {filteredFunds.length === 0 ? (
                 <p className="p-4 text-sm text-gray-500 text-center">Sonuç bulunamadı</p>
               ) : (
@@ -298,7 +305,7 @@ export default function Funds() {
                 step="0.01"
                 value={form.shares}
                 onChange={(e) => setForm({ ...form, shares: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 required
               />
             </div>
@@ -309,14 +316,14 @@ export default function Funds() {
                 step="0.01"
                 value={form.purchase_price}
                 onChange={(e) => setForm({ ...form, purchase_price: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 required
               />
             </div>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setAddModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
+            <button type="button" onClick={() => setAddModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
               İptal
             </button>
             <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25" disabled={!form.fund_code}>
@@ -346,14 +353,14 @@ export default function Funds() {
               step="0.01"
               value={newPrice}
               onChange={(e) => setNewPrice(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               required
               autoFocus
             />
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setUpdateModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
+            <button type="button" onClick={() => setUpdateModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
               İptal
             </button>
             <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
@@ -368,7 +375,7 @@ export default function Funds() {
 
 function SummaryCard({ label, value, valueClass = '' }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
+    <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-4 border border-gray-300 dark:border-slate-700 shadow-sm">
       <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</p>
       <p className={`text-lg font-bold mt-1 ${valueClass || 'text-gray-800 dark:text-white'}`}>{value}</p>
     </div>

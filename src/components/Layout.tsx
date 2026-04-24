@@ -10,9 +10,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-slate-950 text-gray-800 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-200 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-300">
       {/* Top Bar - Mobile */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-gray-100/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-slate-800 sticky top-0 z-40">
+      <div className="lg:hidden flex items-center justify-between p-4 bg-gray-200/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-gray-300 dark:border-slate-800 sticky top-0 z-40">
         <h1 className="text-xl font-bold gradient-text">HBZ Finance</h1>
         <div className="flex items-center gap-2">
           <button
@@ -32,7 +32,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <div className="flex">
         {/* Sidebar - Desktop */}
-        <div className="hidden lg:flex w-64 h-screen sticky top-0 flex-col bg-gray-50 dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800">
+        <div className="hidden lg:flex w-64 h-screen sticky top-0 flex-col bg-gray-100 dark:bg-slate-900 border-r border-gray-300 dark:border-slate-800">
           <div className="p-6 border-b border-gray-200 dark:border-slate-800">
             <h1 className="text-2xl font-bold gradient-text">HBZ Finance</h1>
             <p className="text-xs text-gray-500 mt-1">Kişisel Finans Yönetimi</p>
@@ -101,7 +101,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Bottom Navigation - Mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-gray-200 dark:border-slate-800 z-40 safe-area-pb">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-200/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-gray-300 dark:border-slate-800 z-40 safe-area-pb">
         <Navigation isBottom />
       </div>
     </div>

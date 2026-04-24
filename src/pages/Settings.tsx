@@ -35,7 +35,7 @@ export default function Settings() {
       )}
 
       {/* Profile */}
-      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3 mb-5">
           <div className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
             <User size={20} />
@@ -52,7 +52,7 @@ export default function Settings() {
               type="email" 
               value={user?.email || ''} 
               disabled 
-              className="w-full px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-700 text-slate-500 cursor-not-allowed text-sm"
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-300 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-700 text-slate-500 cursor-not-allowed text-sm"
             />
           </div>
           <div>
@@ -61,14 +61,14 @@ export default function Settings() {
               type="text" 
               value={user?.id || ''} 
               disabled 
-              className="w-full px-4 py-2.5 rounded-xl bg-gray-200 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-700 text-slate-500 cursor-not-allowed text-xs font-mono"
+              className="w-full px-4 py-2.5 rounded-xl bg-gray-300 dark:bg-slate-700/50 border border-gray-300 dark:border-slate-700 text-slate-500 cursor-not-allowed text-xs font-mono"
             />
           </div>
         </div>
       </div>
 
       {/* Theme */}
-      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3 mb-5">
           <div className="p-2.5 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
             <Palette size={20} />
@@ -86,7 +86,7 @@ export default function Settings() {
               className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                 theme === t.value
                   ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                  : 'border-gray-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400'
+                  : 'border-gray-300 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400'
               }`}
             >
               {t.icon}
@@ -101,7 +101,7 @@ export default function Settings() {
       </div>
 
       {/* About */}
-      <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
             <Info size={20} />
