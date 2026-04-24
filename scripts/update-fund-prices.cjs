@@ -59,14 +59,63 @@ async function main() {
           await new Promise(r => setTimeout(r, 5000));
           
           const priceText = await page.evaluate(() => {
-            const lis = document.querySelectorAll('.top-list li, .main-indicators li');
-            for (const li of lis) {
-              const text = li.innerText.trim();
-              if (text.includes('Son Fiyat (TL)')) {
-                const match = text.match(/[\d,.]+/);
-                return match ? match[0] : null;
+            // Strategy 1: Look in common list containers
+            const selectors = [
+              '.top-list li',
+              '.main-indicators li',
+              '.price-indicators li',
+              '.fund-info li',
+              '.indicators li',
+              '[class*="indicator"] li',
+              '[class*="fiyat"]',
+              '[class*="price"]',
+            ];
+            
+            for (const sel of selectors) {
+              const els = document.querySelectorAll(sel);
+              for (const el of els) {
+                const text = el.innerText.trim();
+                if (text.includes('Son Fiyat') || text.includes('Son Fiyat (TL)')) {
+                  const match = text.match(/[\d,.]+/);
+                  if (match) return match[0];
+                }
               }
             }
+            
+            // Strategy 2: Walk all elements and find one that contains "Son Fiyat"
+            const allElements = document.querySelectorAll('*');
+            for (const el of allElements) {
+              const text = el.innerText?.trim();
+              if (text && (text.includes('Son Fiyat (TL)') || text === 'Son Fiyat (TL)')) {
+                // Check siblings or children for numeric value
+                const parent = el.parentElement;
+                if (parent) {
+                  const parentText = parent.innerText.trim();
+                  const match = parentText.match(/[\d,.]+/);
+                  if (match) return match[0];
+                }
+                // Check next sibling
+                const next = el.nextElementSibling;
+                if (next) {
+                  const match = next.innerText.trim().match(/[\d,.]+/);
+                  if (match) return match[0];
+                }
+              }
+            }
+            
+            // Strategy 3: Search all text nodes for pattern "Son Fiyat" followed by number
+            const bodyText = document.body.innerText;
+            const lines = bodyText.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].includes('Son Fiyat')) {
+                // Check this line and next few lines
+                for (let j = i; j < Math.min(i + 3, lines.length); j++) {
+                  const match = lines[j].match(/[\d,.]+/);
+                  if (match) return match[0];
+                }
+              }
+            }
+            
             return null;
           });
           
