@@ -1,8 +1,6 @@
 import { useAccounts, useTransactions, useUserFunds, useExchangeRates } from '../hooks/useSupabase';
 import { useAuth } from '../contexts/AuthContext';
 import { formatTRY, formatCurrency } from '../lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-import CountUp from 'react-countup';
 import { 
   TrendingUp, TrendingDown, Wallet, CreditCard, 
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
@@ -16,34 +14,6 @@ import {
 import type { Account, CurrencyCode } from '../types';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.95 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: 'spring' as const, stiffness: 100, damping: 15 }
-  }
-};
-
-const heroVariants = {
-  hidden: { opacity: 0, y: 40, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: 'spring' as const, stiffness: 80, damping: 20, duration: 0.8 }
-  }
-};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -184,124 +154,81 @@ export default function Dashboard() {
   }
 
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
+    <div className="space-y-6 fade-in">
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
           <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
             Hoş geldiniz, <span className="font-semibold text-indigo-500">{user?.email?.split('@')[0] || 'Kullanıcı'}</span>
           </p>
         </div>
-        <motion.div 
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium border border-emerald-200 dark:border-emerald-800"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium border border-emerald-200 dark:border-emerald-800">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>Canlı</span>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Returns */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <ReturnCard label="Günlük Getiri" value={dailyReturn} icon={<Calendar size={18} />} delay={0} />
-        <ReturnCard label="Haftalık Getiri" value={weeklyReturn} icon={<CalendarDays size={18} />} delay={0.1} />
-        <ReturnCard label="Aylık Getiri" value={monthlyReturn} icon={<CalendarRange size={18} />} delay={0.2} />
-        <ReturnCard label="Yıllık Getiri" value={yearlyReturn} icon={<CalendarCheck size={18} />} delay={0.3} />
-      </motion.div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <ReturnCard label="Günlük Getiri" value={dailyReturn} icon={<Calendar size={18} />} />
+        <ReturnCard label="Haftalık Getiri" value={weeklyReturn} icon={<CalendarDays size={18} />} />
+        <ReturnCard label="Aylık Getiri" value={monthlyReturn} icon={<CalendarRange size={18} />} />
+        <ReturnCard label="Yıllık Getiri" value={yearlyReturn} icon={<CalendarCheck size={18} />} />
+      </div>
 
       {/* Exchange Rates Ticker */}
       {majorRates.length > 0 && (
-        <motion.div variants={itemVariants} className="flex gap-3 overflow-x-auto pb-1">
-          {majorRates.map((rate, i) => (
-            <motion.div 
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {majorRates.map((rate) => (
+            <div 
               key={rate.currency_code}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 + i * 0.1 }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 whitespace-nowrap"
             >
               <span className="text-indigo-500">{rateIcons[rate.currency_code]}</span>
               <span className="text-xs font-bold text-gray-500 dark:text-slate-400">{rate.currency_code}</span>
               <span className="text-sm font-bold text-gray-800 dark:text-white">{rate.rate_to_try.toFixed(2)}</span>
               <span className="text-xs text-gray-400">₺</span>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       )}
 
       {/* Net Worth Card - Hero with Pie Chart */}
-      <motion.div 
-        variants={heroVariants}
+      <div 
         className="relative overflow-hidden rounded-3xl animated-gradient p-8 text-white shadow-2xl"
         style={{ boxShadow: '0 25px 80px -20px rgba(99, 102, 241, 0.4)' }}
       >
         {/* Animated background orbs */}
         <div className="absolute inset-0 overflow-hidden">
-          <motion.div 
-            className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          />
-          <motion.div 
-            className="absolute -bottom-20 -left-20 w-60 h-60 bg-pink-500/20 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.3, 1], x: [0, 30, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-          />
+          <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl float-animation" />
+          <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-pink-500/20 rounded-full blur-3xl float-animation" style={{ animationDelay: '2s' }} />
         </div>
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-white/70 text-sm font-medium tracking-wide uppercase">Net Varlık</span>
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-              >
-                <TrendingUp size={20} className="text-white/50" />
-              </motion.div>
+              <TrendingUp size={20} className="text-white/50" />
             </div>
-            <motion.div 
-              className="text-5xl font-bold mb-6 tracking-tight"
-              key={netWorth}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring' as const, stiffness: 200 }}
-            >
-              <CountUp end={netWorth} duration={2} decimals={2} separator="." decimal="," prefix="₺" />
-            </motion.div>
-            <div className="flex flex-wrap gap-6 text-sm">
-              <motion.div 
-                className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2"
-                whileHover={{ scale: 1.05 }}
-              >
+            <div className="text-5xl font-bold mb-6 tracking-tight">
+              {formatTRY(netWorth)}
+            </div>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
                 <ArrowUpRight size={16} className="text-emerald-300" />
                 <span className="text-white/80">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
-              </motion.div>
-              <motion.div 
-                className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2"
-                whileHover={{ scale: 1.05 }}
-              >
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
                 <ArrowDownRight size={16} className="text-red-300" />
                 <span className="text-white/80">Borç: {formatTRY(totalLiabilities)}</span>
-              </motion.div>
+              </div>
             </div>
           </div>
           
           {/* Pie Chart inside hero card */}
           {pieData.length > 0 && (
-            <motion.div 
-              className="w-full md:w-56 h-44"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring' as const, stiffness: 100, delay: 0.5 }}
-            >
+            <div className="w-full md:w-56 h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -334,29 +261,19 @@ export default function Dashboard() {
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-3 justify-center -mt-1">
                 {pieData.slice(0, 3).map((entry, index) => (
-                  <motion.div 
-                    key={entry.name} 
-                    className="flex items-center gap-1.5 text-[11px] text-white/80"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                  >
-                    <motion.div 
-                      className="w-2.5 h-2.5 rounded-full" 
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      whileHover={{ scale: 1.5 }}
-                    />
+                  <div key={entry.name} className="flex items-center gap-1.5 text-[11px] text-white/80">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                     <span>{entry.name}</span>
-                  </motion.div>
+                  </div>
                 ))}
                 {pieData.length > 3 && (
                   <span className="text-[11px] text-white/50">+{pieData.length - 3}</span>
                 )}
               </div>
-            </motion.div>
+            </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -366,46 +283,31 @@ export default function Dashboard() {
           { icon: <CreditCard size={22} />, label: 'Kredi Kartı', value: Math.abs(accounts?.filter(a => a.type === 'credit_card').reduce((s, a) => s + getAccountValueTRY(a), 0) || 0), gradient: 'from-red-400 to-pink-500', color: '#ef4444' },
           { icon: <Coins size={22} />, label: 'Fonlar', value: fundTotal, gradient: 'from-purple-400 to-violet-500', color: '#8b5cf6' },
         ].map((card) => (
-          <motion.div
+          <div
             key={card.label}
-            variants={itemVariants}
-            whileHover={{ y: -6, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer"
+            className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer card-hover"
           >
-            {/* Glow effect on hover */}
-            <motion.div
+            <div
               className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
               style={{ background: `radial-gradient(circle at 50% 0%, ${card.color}20, transparent 70%)` }}
             />
             <div className="relative z-10">
-              <motion.div 
-                className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${card.gradient} text-white mb-4 shadow-lg`}
-                whileHover={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.5 }}
-              >
+              <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${card.gradient} text-white mb-4 shadow-lg`}>
                 {card.icon}
-              </motion.div>
+              </div>
               <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold">{card.label}</p>
-              <motion.p 
-                className="text-xl font-bold text-gray-800 dark:text-white mt-1"
-                key={card.value}
-              >
-                <CountUp end={card.value} duration={1.5} decimals={2} separator="." decimal="," prefix="₺" />
-              </motion.p>
+              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">
+                {formatTRY(card.value)}
+              </p>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Net Worth Trend */}
-        <motion.div 
-          variants={itemVariants}
-          whileHover={{ y: -4 }}
-          className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden"
-        >
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden card-hover">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
           <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
             <Activity size={18} className="text-indigo-500" />
@@ -449,14 +351,10 @@ export default function Dashboard() {
               />
             </AreaChart>
           </ResponsiveContainer>
-        </motion.div>
+        </div>
 
         {/* Category Spending */}
-        <motion.div 
-          variants={itemVariants}
-          whileHover={{ y: -4 }}
-          className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden"
-        >
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden card-hover">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
           <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
             <TrendingDown size={18} className="text-pink-500" />
@@ -480,7 +378,7 @@ export default function Dashboard() {
                     boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
                   }}
                 />
-                <Bar dataKey="value" fill="url(#barGradient)" radius={[0, 8, 8, 0]}>
+                <Bar dataKey="value" radius={[0, 8, 8, 0]}>
                   {categoryPieData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -493,14 +391,11 @@ export default function Dashboard() {
               <p>Henüz gider kaydı yok</p>
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
 
       {/* Recent Transactions */}
-      <motion.div 
-        variants={itemVariants}
-        className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden"
-      >
+      <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden card-hover">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500" />
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
@@ -510,102 +405,67 @@ export default function Dashboard() {
           <span className="text-xs text-gray-400 bg-gray-200 dark:bg-slate-700 px-3 py-1 rounded-full">Son 5 işlem</span>
         </div>
         <div className="space-y-2">
-          <AnimatePresence>
-            {recentTransactions.length === 0 ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-10 text-gray-400 flex flex-col items-center gap-3"
+          {recentTransactions.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 flex flex-col items-center gap-3">
+              <Gem size={40} className="opacity-30" />
+              <p>Henüz işlem yok</p>
+            </div>
+          ) : (
+            recentTransactions.map((tx, index) => (
+              <div 
+                key={tx.id}
+                className="flex items-center justify-between p-4 rounded-xl bg-gray-200/50 dark:bg-slate-700/30 hover:bg-gray-300/50 dark:hover:bg-slate-700/50 transition-all cursor-pointer slide-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <Gem size={40} className="opacity-30" />
-                <p>Henüz işlem yok</p>
-              </motion.div>
-            ) : (
-              recentTransactions.map((tx, index) => (
-                <motion.div 
-                  key={tx.id}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1, type: 'spring' as const, stiffness: 100 }}
-                  whileHover={{ x: 4, backgroundColor: 'rgba(99, 102, 241, 0.05)' }}
-                  className="flex items-center justify-between p-4 rounded-xl bg-gray-200/50 dark:bg-slate-700/30 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <motion.div 
-                      className={`p-2.5 rounded-xl ${
-                        tx.type === 'income' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' : 
-                        tx.type === 'expense' ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 
-                        'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
-                      }`}
-                      whileHover={{ rotate: 15, scale: 1.1 }}
-                    >
-                      {tx.type === 'income' ? <TrendingUp size={18} /> : 
-                       tx.type === 'expense' ? <TrendingDown size={18} /> : 
-                       <Activity size={18} />}
-                    </motion.div>
-                    <div>
-                      <p className="font-semibold text-sm text-gray-800 dark:text-white">{tx.description || tx.accounts?.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{tx.transaction_date}</p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl ${
+                    tx.type === 'income' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' : 
+                    tx.type === 'expense' ? 'bg-red-100 dark:bg-red-900/30 text-red-600' : 
+                    'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
+                  }`}>
+                    {tx.type === 'income' ? <TrendingUp size={18} /> : 
+                     tx.type === 'expense' ? <TrendingDown size={18} /> : 
+                     <Activity size={18} />}
                   </div>
-                  <motion.span 
-                    className={`font-bold text-sm ${
-                      tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 
-                      tx.type === 'expense' ? 'text-red-600 dark:text-red-400' : 
-                      'text-blue-600 dark:text-blue-400'
-                    }`}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring' as const, stiffness: 200, delay: index * 0.1 + 0.2 }}
-                  >
-                    {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
-                    {formatCurrency(tx.amount, tx.currency)}
-                  </motion.span>
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
+                  <div>
+                    <p className="font-semibold text-sm text-gray-800 dark:text-white">{tx.description || tx.accounts?.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{tx.transaction_date}</p>
+                  </div>
+                </div>
+                <span className={`font-bold text-sm ${
+                  tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 
+                  tx.type === 'expense' ? 'text-red-600 dark:text-red-400' : 
+                  'text-blue-600 dark:text-blue-400'
+                }`}>
+                  {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
+                  {formatCurrency(tx.amount, tx.currency)}
+                </span>
+              </div>
+            ))
+          )}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
-function ReturnCard({ label, value, icon, delay }: { label: string; value: number; icon: React.ReactNode; delay: number }) {
+function ReturnCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
   const isPositive = value >= 0;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 + delay, type: 'spring' as const, stiffness: 100 }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group"
-    >
-      <motion.div
+    <div className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer card-hover">
+      <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
         style={{ background: `radial-gradient(circle at 50% 0%, ${isPositive ? '#10b981' : '#ef4444'}15, transparent 70%)` }}
       />
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-3">
-          <motion.div 
-            className={`p-2 rounded-lg ${isPositive ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.5 }}
-          >
-            {icon}
-          </motion.div>
-          <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-bold">{label}</p>
+        <div className={`p-2 rounded-lg inline-flex mb-3 ${isPositive ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
+          {icon}
         </div>
-        <motion.p 
-          className={`text-2xl font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}
-          key={value}
-          initial={{ scale: 0.5 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring' as const, stiffness: 200 }}
-        >
-          <CountUp end={Math.abs(value)} duration={1.5} decimals={2} separator="." decimal="," prefix={isPositive ? '+₺' : '-₺'} />
-        </motion.p>
+        <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-bold">{label}</p>
+        <p className={`text-2xl font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+          {isPositive ? '+' : ''}{formatTRY(value)}
+        </p>
       </div>
-    </motion.div>
+    </div>
   );
 }
