@@ -60,7 +60,7 @@ gh repo create hbz-finance --public --source=. --push
 
 ### 4. Vercel Deploy
 
-1. [Vercel](https://vercel.com)'e `rexu666@gmail.com` ile kaydolun
+1. [Vercel](https://vercel.com)'e `....@gmail.com` ile kaydolun
 2. "Add New Project" > "Import Git Repository"
 3. GitHub hesabınızı bağlayın ve `hbz-finance` reposunu seçin
 4. Framework Preset: **Vite**
@@ -73,8 +73,8 @@ gh repo create hbz-finance --public --source=. --push
 
 Uygulama açıldığında kayıt olabilir veya admin hesabı ile giriş yapabilirsiniz:
 
-- **Kullanıcı adı**: admin
-- **Şifre**: 230217
+- **Kullanıcı adı**: 
+- **Şifre**: 
 
 ## Fon Fiyatı Güncelleme
 
