@@ -12,7 +12,6 @@ async function main() {
   
   const supabase = createClient(supabaseUrl, supabaseKey);
   
-  // Get all unique fund codes from user_funds
   const { data: userFunds, error } = await supabase
     .from('user_funds')
     .select('id, fund_code');
@@ -35,118 +34,88 @@ async function main() {
   });
   
   try {
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-    
-    for (const uf of userFunds) {
+    for (let i = 0; i < userFunds.length; i++) {
+      const uf = userFunds[i];
+      
+      // Wait between funds to avoid rate limiting
+      if (i > 0) {
+        console.log('Waiting 10s before next fund...');
+        await new Promise(r => setTimeout(r, 10000));
+      }
+      
       let lastError = null;
       let success = false;
       
       for (let attempt = 1; attempt <= 3; attempt++) {
+        let page = null;
         try {
           if (attempt > 1) {
             console.log(`Retrying ${uf.fund_code} (attempt ${attempt}/3)...`);
-            await new Promise(r => setTimeout(r, 5000 * attempt));
+            await new Promise(r => setTimeout(r, 15000 * attempt));
           } else {
             console.log(`Processing ${uf.fund_code}...`);
           }
           
-          // Step 1: Go to main page
-          await page.goto('https://www.tefas.gov.tr/FonAnaliz.aspx', {
-            waitUntil: 'load',
-            timeout: 90000
-          });
-          await new Promise(r => setTimeout(r, 5000));
+          // Fresh page for each fund attempt
+          page = await browser.newPage();
+          await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+          page.setDefaultNavigationTimeout(180000);
+          page.setDefaultTimeout(180000);
           
-          // Step 2: Click on the fund link in the list
+          // Step 1: Go to main page with shorter wait
+          console.log(`  Loading main page...`);
+          await page.goto('https://www.tefas.gov.tr/FonAnaliz.aspx', {
+            waitUntil: 'domcontentloaded',
+            timeout: 180000
+          });
+          await new Promise(r => setTimeout(r, 8000));
+          
+          // Step 2: Find and click fund link
           const linkSelector = `a[href*="FonKod=${uf.fund_code}"]`;
           const link = await page.$(linkSelector);
           
           if (!link) {
-            console.log(`Fund link not found for ${uf.fund_code} on main page`);
-            // Take screenshot for debugging
-            await page.screenshot({ path: `debug-${uf.fund_code}.png` });
+            console.log(`  Fund link not found for ${uf.fund_code}`);
+            await page.close();
             break;
           }
           
-          // Click the link and wait for navigation
+          console.log(`  Clicking fund link...`);
           await Promise.all([
-            page.waitForNavigation({ waitUntil: 'load', timeout: 90000 }),
+            page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 180000 }),
             link.click()
           ]);
           
-          await new Promise(r => setTimeout(r, 5000));
+          await new Promise(r => setTimeout(r, 8000));
           
-          // Step 3: Extract price from the loaded page
+          // Step 3: Extract price
           const priceText = await page.evaluate(() => {
-            const strategies = [
-              // Strategy 1: Common list containers
-              () => {
-                const selectors = [
-                  '.top-list li',
-                  '.main-indicators li',
-                  '.price-indicators li',
-                  '.fund-info li',
-                  '.indicators li',
-                  '[class*="indicator"] li',
-                  '[class*="fiyat"]',
-                  '[class*="price"]',
-                ];
-                for (const sel of selectors) {
-                  const els = document.querySelectorAll(sel);
-                  for (const el of els) {
-                    const text = el.innerText.trim();
-                    if (text.includes('Son Fiyat') || text.includes('Son Fiyat (TL)')) {
-                      const match = text.match(/[\d,.]+/);
-                      if (match) return match[0];
-                    }
-                  }
+            const allElements = document.querySelectorAll('*');
+            for (const el of allElements) {
+              const text = el.innerText?.trim();
+              if (text && text.includes('Son Fiyat')) {
+                const parent = el.closest('li') || el.closest('div');
+                if (parent) {
+                  const match = parent.innerText.match(/[\d,.]+/);
+                  if (match) return match[0];
                 }
-                return null;
-              },
-              // Strategy 2: Walk all elements containing "Son Fiyat"
-              () => {
-                const allElements = document.querySelectorAll('*');
-                for (const el of allElements) {
-                  const text = el.innerText?.trim();
-                  if (text && (text.includes('Son Fiyat (TL)') || text === 'Son Fiyat (TL)')) {
-                    const parent = el.parentElement;
-                    if (parent) {
-                      const parentText = parent.innerText.trim();
-                      const match = parentText.match(/[\d,.]+/);
-                      if (match) return match[0];
-                    }
-                    const next = el.nextElementSibling;
-                    if (next) {
-                      const match = next.innerText.trim().match(/[\d,.]+/);
-                      if (match) return match[0];
-                    }
-                  }
-                }
-                return null;
-              },
-              // Strategy 3: Search page text line by line
-              () => {
-                const bodyText = document.body.innerText;
-                const lines = bodyText.split('\n');
-                for (let i = 0; i < lines.length; i++) {
-                  if (lines[i].includes('Son Fiyat')) {
-                    for (let j = i; j < Math.min(i + 3, lines.length); j++) {
-                      const match = lines[j].match(/[\d,.]+/);
-                      if (match) return match[0];
-                    }
-                  }
-                }
-                return null;
               }
-            ];
-            
-            for (const strategy of strategies) {
-              const result = strategy();
-              if (result) return result;
+            }
+            // Fallback: search all text
+            const bodyText = document.body.innerText;
+            const lines = bodyText.split('\n').map(l => l.trim()).filter(Boolean);
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].includes('Son Fiyat')) {
+                for (let j = i; j < Math.min(i + 5, lines.length); j++) {
+                  const match = lines[j].match(/^[\d,.]+$/);
+                  if (match) return match[0];
+                }
+              }
             }
             return null;
           });
+          
+          await page.close();
           
           if (priceText && priceText !== '0') {
             let normalized = priceText;
@@ -166,31 +135,33 @@ async function main() {
                 .eq('id', uf.id);
               
               if (updateError) {
-                console.error(`Failed to update ${uf.fund_code}:`, updateError.message);
+                console.error(`  Failed to update ${uf.fund_code}:`, updateError.message);
               } else {
-                console.log(`Updated ${uf.fund_code}: ${price}`);
+                console.log(`  Updated ${uf.fund_code}: ${price}`);
               }
               success = true;
               break;
             } else {
-              console.log(`Invalid price for ${uf.fund_code}: "${priceText}" -> ${price}`);
+              console.log(`  Invalid price for ${uf.fund_code}: "${priceText}" -> ${price}`);
               success = true;
               break;
             }
           } else {
-            console.log(`No price found for ${uf.fund_code}, taking debug screenshot`);
-            await page.screenshot({ path: `debug-${uf.fund_code}.png` });
+            console.log(`  No price found for ${uf.fund_code}`);
             success = true;
             break;
           }
         } catch (err) {
           lastError = err;
-          console.error(`Attempt ${attempt} failed for ${uf.fund_code}:`, err.message);
+          console.error(`  Attempt ${attempt} failed for ${uf.fund_code}:`, err.message);
+          if (page) {
+            try { await page.close(); } catch (_) {}
+          }
         }
       }
       
       if (!success && lastError) {
-        console.error(`Giving up on ${uf.fund_code} after 3 attempts. Last error:`, lastError.message);
+        console.error(`  Giving up on ${uf.fund_code} after 3 attempts`);
       }
     }
     
