@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTransactions, useAccounts, useCategories, useCreateTransaction, useDeleteTransaction } from '../hooks/useSupabase';
 import { formatCurrency, formatDate } from '../lib/utils';
-import { Plus, Trash2, ArrowUpRight, ArrowDownRight, ArrowLeftRight } from 'lucide-react';
+import { Plus, Trash2, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter } from 'lucide-react';
 import Modal from '../components/Modal';
 import type { TransactionType, CurrencyCode } from '../types';
 
@@ -26,17 +26,21 @@ export default function Transactions() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createTransaction.mutateAsync(form);
-    setModalOpen(false);
-    setForm({
-      account_id: '',
-      type: 'expense',
-      category_id: '',
-      amount: 0,
-      currency: 'TRY',
-      description: '',
-      transaction_date: new Date().toISOString().split('T')[0],
-    });
+    try {
+      await createTransaction.mutateAsync(form);
+      setModalOpen(false);
+      setForm({
+        account_id: '',
+        type: 'expense',
+        category_id: '',
+        amount: 0,
+        currency: 'TRY',
+        description: '',
+        transaction_date: new Date().toISOString().split('T')[0],
+      });
+    } catch (err: any) {
+      alert('Hata: ' + (err.message || 'İşlem eklenemedi'));
+    }
   };
 
   const filteredTransactions = transactions?.filter((tx) =>
@@ -45,9 +49,9 @@ export default function Transactions() {
 
   const getTypeIcon = (type: TransactionType) => {
     switch (type) {
-      case 'income': return <ArrowUpRight size={18} className="text-emerald-500" />;
-      case 'expense': return <ArrowDownRight size={18} className="text-red-500" />;
-      case 'transfer': return <ArrowLeftRight size={18} className="text-blue-500" />;
+      case 'income': return <ArrowUpRight size={16} className="text-emerald-500" />;
+      case 'expense': return <ArrowDownRight size={16} className="text-red-500" />;
+      case 'transfer': return <ArrowLeftRight size={16} className="text-indigo-500" />;
     }
   };
 
@@ -60,19 +64,28 @@ export default function Transactions() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Yükleniyor...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg skeleton" />
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-16 bg-slate-200 dark:bg-slate-700 rounded-xl skeleton" />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="section-title">İşlemler</h1>
-          <p className="text-slate-500 dark:text-slate-400">Tüm gelir ve gider işlemleriniz</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">İşlemler</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Tüm gelir ve gider işlemleriniz</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="btn btn-primary"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25"
         >
           <Plus size={18} />
           <span>Yeni İşlem</span>
@@ -85,10 +98,10 @@ export default function Transactions() {
           <button
             key={type}
             onClick={() => setFilterType(type)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
               filterType === type
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
             }`}
           >
             {type === 'all' ? 'Tümü' : getTypeLabel(type)}
@@ -97,23 +110,30 @@ export default function Transactions() {
       </div>
 
       {/* Transactions List */}
-      <div className="card card-light dark:card-dark">
-        <div className="space-y-2">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="divide-y divide-slate-100 dark:divide-slate-700">
           {filteredTransactions?.length === 0 ? (
-            <p className="text-center py-8 text-slate-500 dark:text-slate-400">Henüz işlem yok</p>
+            <div className="text-center py-12 text-slate-400">
+              <Filter size={32} className="mx-auto mb-2 opacity-50" />
+              <p>Henüz işlem yok</p>
+            </div>
           ) : (
             filteredTransactions?.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700">
+                  <div className={`p-2 rounded-xl ${
+                    tx.type === 'income' ? 'bg-emerald-100 dark:bg-emerald-900/20' : 
+                    tx.type === 'expense' ? 'bg-red-100 dark:bg-red-900/20' : 
+                    'bg-indigo-100 dark:bg-indigo-900/20'
+                  }`}>
                     {getTypeIcon(tx.type)}
                   </div>
                   <div>
-                    <p className="font-medium">{tx.description || tx.accounts?.name}</p>
-                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <p className="font-medium text-sm text-slate-900 dark:text-white">{tx.description || tx.accounts?.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       <span>{tx.accounts?.name}</span>
                       <span>•</span>
                       <span>{formatDate(tx.transaction_date)}</span>
@@ -127,18 +147,18 @@ export default function Transactions() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`font-semibold ${
+                  <span className={`font-semibold text-sm ${
                     tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 
-                    tx.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'
+                    tx.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-indigo-600 dark:text-indigo-400'
                   }`}>
                     {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
                     {formatCurrency(tx.amount, tx.currency)}
                   </span>
                   <button
                     onClick={() => { if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) deleteTransaction.mutateAsync(tx.id); }}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 opacity-0 group-hover:opacity-100"
+                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
@@ -154,17 +174,17 @@ export default function Transactions() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label">İşlem Tipi</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">İşlem Tipi</label>
             <div className="grid grid-cols-3 gap-2">
               {(['income', 'expense', 'transfer'] as TransactionType[]).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setForm({ ...form, type })}
-                  className={`p-2 rounded-lg border text-sm font-medium transition-all ${
+                  className={`p-3 rounded-xl border text-sm font-medium transition-all ${
                     form.type === type
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                      : 'border-slate-200 dark:border-slate-700'
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   {getTypeLabel(type)}
@@ -174,11 +194,11 @@ export default function Transactions() {
           </div>
 
           <div>
-            <label className="label">Hesap</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Hesap</label>
             <select
               value={form.account_id}
               onChange={(e) => setForm({ ...form, account_id: e.target.value })}
-              className="input"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               required
             >
               <option value="">Hesap seçin</option>
@@ -189,11 +209,11 @@ export default function Transactions() {
           </div>
 
           <div>
-            <label className="label">Kategori</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Kategori</label>
             <select
               value={form.category_id}
               onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-              className="input"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
             >
               <option value="">Kategori seçin (isteğe bağlı)</option>
               {categories?.filter(c => c.type === form.type).map((cat) => (
@@ -204,22 +224,22 @@ export default function Transactions() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Tutar</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Tutar</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
-                className="input"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 required
               />
             </div>
             <div>
-              <label className="label">Para Birimi</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Para Birimi</label>
               <select
                 value={form.currency}
                 onChange={(e) => setForm({ ...form, currency: e.target.value as CurrencyCode })}
-                className="input"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               >
                 {['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY'].map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -229,32 +249,32 @@ export default function Transactions() {
           </div>
 
           <div>
-            <label className="label">Açıklama</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Açıklama</label>
             <input
               type="text"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               placeholder="İşlem açıklaması"
             />
           </div>
 
           <div>
-            <label className="label">Tarih</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Tarih</label>
             <input
               type="date"
               value={form.transaction_date}
               onChange={(e) => setForm({ ...form, transaction_date: e.target.value })}
-              className="input"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               required
             />
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary flex-1">
+            <button type="button" onClick={() => setModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium">
               İptal
             </button>
-            <button type="submit" className="btn btn-primary flex-1">
+            <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
               Kaydet
             </button>
           </div>
