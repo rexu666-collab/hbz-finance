@@ -19,32 +19,28 @@ serve(async (req) => {
     
     const html = await response.text()
     
-    // Test 2: Does the HTML contain fund links (meaning page loaded properly)?
+    // Test 2: Check what's in the HTML
     const hasFonKod = html.includes('FonKod')
     const hasSonFiyat = html.includes('Son Fiyat')
+    const hasTitle = html.includes('<title>')
+    
+    // Try to extract title to see what page we got
+    const titleMatch = html.match(/<title>(.*?)<\/title>/i)
+    const pageTitle = titleMatch ? titleMatch[1] : 'No title'
     
     // Test 3: Try to extract price with regex
-    // Look for "Son Fiyat" followed by numbers
     const priceMatch = html.match(/Son Fiyat \(TL\)[\s\S]*?([\d,.]+)/)
     const extractedPrice = priceMatch ? priceMatch[1] : null
-    
-    // Test 4: Check if price is 0 (meaning JS needs to load it)
-    const isZeroPrice = html.includes('Son Fiyat (TL)</span>\s*0\s*<') || 
-                        html.includes('Son Fiyat (TL)</div>\s*0\s*<') ||
-                        html.match(/Son Fiyat.*?\b0\b/s) !== null
     
     return new Response(JSON.stringify({
       status: response.status,
       htmlLength: html.length,
+      pageTitle,
       hasFonKod,
       hasSonFiyat,
       extractedPrice,
-      isZeroPrice,
       headers: Object.fromEntries(response.headers.entries()),
-      sample: html.substring(
-        Math.max(0, html.indexOf('Son Fiyat') - 100),
-        Math.min(html.length, html.indexOf('Son Fiyat') + 200)
-      )
+      htmlStart: html.substring(0, 500)
     }, null, 2), {
       status: 200,
       headers: { 
