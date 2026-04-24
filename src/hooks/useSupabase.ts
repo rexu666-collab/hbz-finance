@@ -69,7 +69,31 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (transaction: Omit<Transaction, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase.from('transactions').insert(transaction as any).select().single();
+      const { data: txData, error: txError } = await supabase.from('transactions').insert(transaction as any).select().single();
+      if (txError) throw txError;
+      
+      // Update account balance
+      const { data: account } = await supabase.from('accounts').select('balance').eq('id', transaction.account_id).single();
+      if (account) {
+        const delta = transaction.type === 'income' ? transaction.amount : transaction.type === 'expense' ? -transaction.amount : 0;
+        const newBalance = (account.balance || 0) + delta;
+        await supabase.from('accounts').update({ balance: newBalance }).eq('id', transaction.account_id);
+      }
+      
+      return txData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
+}
+
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Transaction> & { id: string }) => {
+      const { data, error } = await supabase.from('transactions').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },

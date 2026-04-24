@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { useFunds, useUserFunds, useCreateUserFund, useUpdateUserFund, useDeleteUserFund } from '../hooks/useSupabase';
 import { formatTRY, formatPercent } from '../lib/utils';
 import { Plus, Search, RefreshCw, Trash2, TrendingUp, Download } from 'lucide-react';
@@ -7,6 +8,7 @@ import Modal from '../components/Modal';
 
 export default function Funds() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const { data: allFunds, isLoading: fundsLoading } = useFunds();
   const { data: userFunds, isLoading: userFundsLoading } = useUserFunds();
   const createUserFund = useCreateUserFund();
@@ -38,21 +40,22 @@ export default function Funds() {
   const handleAddFund = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fund_code) {
-      alert('Lütfen bir fon seçin');
+      addToast('Lütfen bir fon seçin', 'error');
       return;
     }
     if (!user?.id) {
-      alert('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+      addToast('Oturum bulunamadı. Lütfen tekrar giriş yapın.', 'error');
       return;
     }
     try {
       await createUserFund.mutateAsync({ ...form, user_id: user.id });
+      addToast('Fon eklendi!', 'success');
       setAddModalOpen(false);
       setForm({ fund_code: '', shares: 0, purchase_price: 0 });
       setSearchQuery('');
     } catch (err: any) {
       console.error('Fund error:', err);
-      alert('Hata: ' + (err?.message || err?.error_description || JSON.stringify(err) || 'Fon eklenemedi'));
+      addToast('Hata: ' + (err?.message || 'Fon eklenemedi'), 'error');
     }
   };
 
@@ -77,8 +80,9 @@ export default function Funds() {
     if (confirm('Bu fonu portföyünüzden kaldırmak istediğinize emin misiniz?')) {
       try {
         await deleteUserFund.mutateAsync(id);
+        addToast('Fon silindi!', 'success');
       } catch (err: any) {
-        alert('Silme hatası: ' + err.message);
+        addToast('Silme hatası: ' + err.message, 'error');
       }
     }
   };
@@ -95,15 +99,11 @@ export default function Funds() {
         id: uf.id,
         current_price: data.price,
       });
+      addToast(`${uf.fund_code} güncellendi: ${data.price} ₺`, 'success');
     } catch (err: any) {
-      // Otomatik çekme başarısız olursa TEFAS sayfasını aç
       const tefasUrl = `https://www.tefas.gov.tr/FonAnaliz.aspx?FonKodu=${encodeURIComponent(uf.fund_code)}`;
       window.open(tefasUrl, '_blank', 'noopener,noreferrer');
-      alert(
-        `"${uf.fund_code}" fonu için otomatik fiyat çekilemedi.\n\n` +
-        `TEFAS sayfası yeni sekmede açıldı.\n` +
-        `Lütfen "Son Fiyat" değerini kopyalayıp "Manuel" butonu ile güncelleyin.`
-      );
+      addToast(`Otomatik çekilemedi. TEFAS sayfası açıldı.`, 'info');
     } finally {
       setAutoUpdating(null);
     }

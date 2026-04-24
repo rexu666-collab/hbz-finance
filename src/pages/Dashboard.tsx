@@ -8,11 +8,11 @@ import {
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar
 } from 'recharts';
 import type { Account, CurrencyCode } from '../types';
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -81,14 +81,56 @@ export default function Dashboard() {
   const monthlyReturn = getPeriodReturn(30);
   const yearlyReturn = getPeriodReturn(365);
 
-  const netWorthHistory = [
-    { date: '01.04', value: netWorth * 0.95 },
-    { date: '05.04', value: netWorth * 0.97 },
-    { date: '10.04', value: netWorth * 0.94 },
-    { date: '15.04', value: netWorth * 0.98 },
-    { date: '20.04', value: netWorth * 0.99 },
-    { date: 'Bugün', value: netWorth },
-  ];
+  // Real Net Worth History from transactions
+  const getNetWorthHistory = () => {
+    if (!transactions || transactions.length === 0) {
+      return [{ date: 'Bugün', value: netWorth }];
+    }
+    
+    const sortedTx = [...transactions].sort((a, b) => 
+      new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
+    );
+    
+    const startDate = new Date(sortedTx[0].transaction_date);
+    const today = new Date();
+    const history: { date: string; value: number }[] = [];
+    
+    // Create 6 data points
+    const points = 6;
+    for (let i = 0; i < points; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + Math.floor((today.getTime() - startDate.getTime()) / (points - 1) * i));
+      
+      const cumTx = sortedTx.filter(tx => new Date(tx.transaction_date) <= date);
+      const cumIncome = cumTx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
+      const cumExpense = cumTx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
+      const cumNet = cumIncome - cumExpense + totalAssets;
+      
+      const label = i === points - 1 ? 'Bugün' : date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+      history.push({ date: label, value: Math.max(0, cumNet) });
+    }
+    
+    return history;
+  };
+
+  const netWorthHistory = getNetWorthHistory();
+
+  // Category spending analysis
+  const categoryData = transactions
+    ?.filter(tx => tx.type === 'expense')
+    .reduce((acc: Record<string, number>, tx) => {
+      const catName = tx.categories?.name || 'Diğer';
+      acc[catName] = (acc[catName] || 0) + tx.amount;
+      return acc;
+    }, {});
+
+  const categoryPieData = Object.entries(categoryData || {})
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
+  // Exchange rates display
+  const majorRates = exchangeRates?.filter(r => ['USD', 'EUR', 'GBP', 'XAU'].includes(r.currency_code)) || [];
 
   const isLoading = accountsLoading || txLoading || fundsLoading;
 
@@ -128,6 +170,18 @@ export default function Dashboard() {
         <ReturnCard label="Aylık Getiri" value={monthlyReturn} icon={<CalendarRange size={18} />} />
         <ReturnCard label="Yıllık Getiri" value={yearlyReturn} icon={<CalendarCheck size={18} />} />
       </div>
+
+      {/* Exchange Rates */}
+      {majorRates.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {majorRates.map((rate) => (
+            <div key={rate.currency_code} className="bg-gray-100 dark:bg-slate-800 rounded-xl p-3 border border-gray-300 dark:border-slate-700">
+              <p className="text-xs text-gray-500 dark:text-slate-400">{rate.currency_code}</p>
+              <p className="text-lg font-bold text-gray-800 dark:text-white">{rate.rate_to_try.toFixed(2)} ₺</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Net Worth Card - Hero with Pie Chart */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 text-white shadow-xl shadow-indigo-500/20">
@@ -229,32 +283,65 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Net Worth Trend */}
-      <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Net Varlık Trendi</h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={netWorthHistory}>
-            <defs>
-              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
-            <Tooltip 
-              formatter={(value: any) => formatTRY(Number(value))}
-              contentStyle={{ 
-                backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                border: 'none', 
-                borderRadius: '12px',
-                color: '#fff'
-              }}
-            />
-            <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorValue)" />
-          </AreaChart>
-        </ResponsiveContainer>
+      {/* Charts Row */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Net Worth Trend */}
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Net Varlık Trendi</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <AreaChart data={netWorthHistory}>
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
+              <Tooltip 
+                formatter={(value: any) => formatTRY(Number(value))}
+                contentStyle={{ 
+                  backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                  border: 'none', 
+                  borderRadius: '12px',
+                  color: '#fff'
+                }}
+              />
+              <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorValue)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Category Spending */}
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Kategori Harcamaları</h3>
+          {categoryPieData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={categoryPieData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
+                  <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    formatter={(value: any) => formatTRY(Number(value))}
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      color: '#fff'
+                    }}
+                  />
+                  <Bar dataKey="value" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center text-gray-400">
+              Henüz gider kaydı yok
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Recent Transactions */}

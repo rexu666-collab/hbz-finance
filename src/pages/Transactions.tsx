@@ -1,20 +1,24 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTransactions, useAccounts, useCategories, useCreateTransaction, useDeleteTransaction } from '../hooks/useSupabase';
-import { formatCurrency, formatDate } from '../lib/utils';
-import { Plus, Trash2, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
+import { useTransactions, useAccounts, useCategories, useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from '../hooks/useSupabase';
+import { formatCurrency, formatDate, formatTRY } from '../lib/utils';
+import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import Modal from '../components/Modal';
 import type { TransactionType, CurrencyCode } from '../types';
 
 export default function Transactions() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const { data: transactions, isLoading } = useTransactions();
   const { data: accounts } = useAccounts();
   const { data: categories } = useCategories();
   const createTransaction = useCreateTransaction();
+  const updateTransaction = useUpdateTransaction();
   const deleteTransaction = useDeleteTransaction();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<any>(null);
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all');
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -33,12 +37,19 @@ export default function Transactions() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) {
-      alert('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+      addToast('Oturum bulunamadı. Lütfen tekrar giriş yapın.', 'error');
       return;
     }
     try {
-      await createTransaction.mutateAsync({ ...form, user_id: user.id });
+      if (editingTx) {
+        await updateTransaction.mutateAsync({ id: editingTx.id, ...form });
+        addToast('İşlem güncellendi!', 'success');
+      } else {
+        await createTransaction.mutateAsync({ ...form, user_id: user.id });
+        addToast('İşlem eklendi!', 'success');
+      }
       setModalOpen(false);
+      setEditingTx(null);
       setForm({
         account_id: '',
         type: 'expense',
@@ -50,7 +61,32 @@ export default function Transactions() {
       });
     } catch (err: any) {
       console.error('Transaction error:', err);
-      alert('Hata: ' + (err?.message || err?.error_description || JSON.stringify(err) || 'İşlem eklenemedi'));
+      addToast('Hata: ' + (err?.message || 'İşlem eklenemedi'), 'error');
+    }
+  };
+
+  const handleEdit = (tx: any) => {
+    setEditingTx(tx);
+    setForm({
+      account_id: tx.account_id,
+      type: tx.type,
+      category_id: tx.category_id || '',
+      amount: tx.amount,
+      currency: tx.currency,
+      description: tx.description || '',
+      transaction_date: tx.transaction_date,
+    });
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) {
+      try {
+        await deleteTransaction.mutateAsync(id);
+        addToast('İşlem silindi!', 'success');
+      } catch (err: any) {
+        addToast('Silme hatası: ' + err.message, 'error');
+      }
     }
   };
 
@@ -63,6 +99,11 @@ export default function Transactions() {
     const inType = filterType === 'all' ? true : tx.type === filterType;
     return inMonth && inType;
   });
+
+  // Monthly summary
+  const monthIncome = filteredTransactions?.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0) || 0;
+  const monthExpense = filteredTransactions?.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0) || 0;
+  const monthNet = monthIncome - monthExpense;
 
   const monthLabel = currentMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
 
@@ -106,7 +147,7 @@ export default function Transactions() {
           <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">Tüm gelir ve gider işlemleriniz</p>
         </div>
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => { setEditingTx(null); setModalOpen(true); }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25"
         >
           <Plus size={18} />
@@ -123,6 +164,24 @@ export default function Transactions() {
         <button onClick={goNextMonth} className="p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors text-gray-600 dark:text-slate-400">
           <ChevronRight size={20} />
         </button>
+      </div>
+
+      {/* Monthly Summary */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-800">
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Gelir</p>
+          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">+{formatTRY(monthIncome)}</p>
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 border border-red-200 dark:border-red-800">
+          <p className="text-xs text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">Gider</p>
+          <p className="text-xl font-bold text-red-700 dark:text-red-300">-{formatTRY(monthExpense)}</p>
+        </div>
+        <div className={`${monthNet >= 0 ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800'} rounded-2xl p-4 border`}>
+          <p className={`text-xs uppercase tracking-wider mb-1 ${monthNet >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>Net</p>
+          <p className={`text-xl font-bold ${monthNet >= 0 ? 'text-blue-700 dark:text-blue-300' : 'text-orange-700 dark:text-orange-300'}`}>
+            {monthNet >= 0 ? '+' : ''}{formatTRY(monthNet)}
+          </p>
+        </div>
       </div>
 
       {/* Filters */}
@@ -154,7 +213,7 @@ export default function Transactions() {
             filteredTransactions?.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors"
+                className="flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors group"
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-xl ${
@@ -187,12 +246,20 @@ export default function Transactions() {
                     {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
                     {formatCurrency(tx.amount, tx.currency)}
                   </span>
-                  <button
-                    onClick={() => { if (confirm('Bu işlemi silmek istediğinize emin misiniz?')) deleteTransaction.mutateAsync(tx.id); }}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleEdit(tx)}
+                      className="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-400 transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(tx.id)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -202,8 +269,8 @@ export default function Transactions() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Yeni İşlem"
+        onClose={() => { setModalOpen(false); setEditingTx(null); }}
+        title={editingTx ? 'İşlem Düzenle' : 'Yeni İşlem'}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -304,11 +371,11 @@ export default function Transactions() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setModalOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
+            <button type="button" onClick={() => { setModalOpen(false); setEditingTx(null); }} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
               İptal
             </button>
             <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
-              Kaydet
+              {editingTx ? 'Güncelle' : 'Kaydet'}
             </button>
           </div>
         </form>

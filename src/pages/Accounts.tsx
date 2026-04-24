@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useExchangeRates } from '../hooks/useSupabase';
 import { formatCurrency } from '../lib/utils';
 import { Plus, Pencil, Trash2, Wallet, Landmark, CreditCard, FileText, TrendingUp, PieChart } from 'lucide-react';
@@ -21,6 +22,7 @@ const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 
 export default function Accounts() {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const { data: accounts, isLoading } = useAccounts();
   const { data: exchangeRates } = useExchangeRates();
   const createAccount = useCreateAccount();
@@ -51,7 +53,7 @@ export default function Accounts() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) {
-      alert('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+      addToast('Oturum bulunamadı. Lütfen tekrar giriş yapın.', 'error');
       return;
     }
     try {
@@ -64,14 +66,16 @@ export default function Accounts() {
       
       if (editingAccount) {
         await updateAccount.mutateAsync({ id: editingAccount.id, ...data });
+        addToast('Hesap güncellendi!', 'success');
       } else {
         await createAccount.mutateAsync(data);
+        addToast('Hesap eklendi!', 'success');
       }
       setModalOpen(false);
       resetForm();
     } catch (err: any) {
       console.error('Account error:', err);
-      alert('Hata: ' + (err?.message || err?.error_description || JSON.stringify(err) || 'Hesap eklenemedi'));
+      addToast('Hata: ' + (err?.message || 'Hesap eklenemedi'), 'error');
     }
   };
 
@@ -92,8 +96,9 @@ export default function Accounts() {
     if (confirm('Bu hesabı silmek istediğinize emin misiniz?')) {
       try {
         await deleteAccount.mutateAsync(id);
+        addToast('Hesap silindi!', 'success');
       } catch (err: any) {
-        alert('Silme hatası: ' + err.message);
+        addToast('Silme hatası: ' + err.message, 'error');
       }
     }
   };
