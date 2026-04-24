@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useFunds, useUserFunds, useCreateUserFund, useUpdateUserFund, useDeleteUserFund } from '../hooks/useSupabase';
 import { formatTRY, formatPercent } from '../lib/utils';
-import { Plus, Search, RefreshCw, Trash2, TrendingUp, Download } from 'lucide-react';
+import { Plus, Search, RefreshCw, Trash2, TrendingUp } from 'lucide-react';
 import Modal from '../components/Modal';
 
 export default function Funds() {
@@ -20,7 +20,6 @@ export default function Funds() {
   const [selectedFund, setSelectedFund] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newPrice, setNewPrice] = useState('');
-  const [autoUpdating, setAutoUpdating] = useState<string | null>(null);
   const [form, setForm] = useState({
     fund_code: '',
     shares: 0,
@@ -87,26 +86,10 @@ export default function Funds() {
     }
   };
 
-  const handleAutoFetch = async (uf: any) => {
-    setAutoUpdating(uf.id);
-    try {
-      const res = await fetch(`/api/fund-price?code=${encodeURIComponent(uf.fund_code)}`);
-      const data = await res.json();
-      if (!res.ok || !data.price) {
-        throw new Error(data.error || 'Fiyat bulunamadı');
-      }
-      await updateUserFund.mutateAsync({
-        id: uf.id,
-        current_price: data.price,
-      });
-      addToast(`${uf.fund_code} güncellendi: ${data.price} ₺`, 'success');
-    } catch (err: any) {
-      const tefasUrl = `https://www.tefas.gov.tr/FonAnaliz.aspx?FonKodu=${encodeURIComponent(uf.fund_code)}`;
-      window.open(tefasUrl, '_blank', 'noopener,noreferrer');
-      addToast(`Otomatik çekilemedi. TEFAS sayfası açıldı.`, 'info');
-    } finally {
-      setAutoUpdating(null);
-    }
+  const handleOpenTefas = (uf: any) => {
+    const tefasUrl = `https://www.tefas.gov.tr/FonAnaliz.aspx?FonKod=${encodeURIComponent(uf.fund_code)}`;
+    window.open(tefasUrl, '_blank', 'noopener,noreferrer');
+    addToast(`${uf.fund_code} TEFAS'ta açıldı. Fiyatı görüp manuel güncelleyebilirsiniz.`, 'info');
   };
 
   const totalValue = userFunds?.reduce((sum, uf) => sum + (uf.shares * uf.current_price), 0) || 0;
@@ -160,6 +143,21 @@ export default function Funds() {
             value={formatPercent(totalProfitPercent)}
             valueClass={totalProfitPercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}
           />
+        </div>
+      )}
+
+      {/* Info Banner */}
+      {userFunds && userFunds.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex items-start gap-3">
+          <TrendingUp size={18} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">Fiyat Güncelleme</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+              TEFAS otomatik fiyat çekimi sunucu tarafından engelleniyor. 
+              "TEFAS" butonuna basarak fonun sayfasını açabilir, fiyatı görüp "Fiyat Güncelle" ile manuel girebilirsiniz. 
+              Bu işlem telefon veya herhangi bir cihazdan yapılabilir.
+            </p>
+          </div>
         </div>
       )}
 
@@ -224,19 +222,19 @@ export default function Funds() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleAutoFetch(uf)}
-                      disabled={autoUpdating === uf.id}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium hover:bg-emerald-200 dark:hover:bg-emerald-900/30 transition-colors disabled:opacity-50"
+                      onClick={() => handleOpenTefas(uf)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors"
+                      title="TEFAS'ta görüntüle"
                     >
-                      <Download size={14} className={autoUpdating === uf.id ? 'animate-bounce' : ''} />
-                      <span>{autoUpdating === uf.id ? 'Çekiliyor...' : 'Otomatik Çek'}</span>
+                      <TrendingUp size={14} />
+                      <span>TEFAS</span>
                     </button>
                     <button
                       onClick={() => { setSelectedFund(uf); setNewPrice(uf.current_price.toString()); setUpdateModalOpen(true); }}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-300 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
                     >
                       <RefreshCw size={14} />
-                      <span>Manuel</span>
+                      <span>Fiyat Güncelle</span>
                     </button>
                     <button
                       onClick={() => handleDelete(uf.id)}
