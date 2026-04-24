@@ -42,85 +42,113 @@ async function main() {
       let lastError = null;
       let success = false;
       
-      // Retry up to 3 times
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           if (attempt > 1) {
             console.log(`Retrying ${uf.fund_code} (attempt ${attempt}/3)...`);
-            await new Promise(r => setTimeout(r, 5000 * attempt)); // increasing delay
+            await new Promise(r => setTimeout(r, 5000 * attempt));
           } else {
             console.log(`Processing ${uf.fund_code}...`);
           }
           
-          await page.goto(`https://www.tefas.gov.tr/FonAnaliz.aspx?FonKod=${uf.fund_code}`, {
-            waitUntil: 'domcontentloaded',
+          // Step 1: Go to main page
+          await page.goto('https://www.tefas.gov.tr/FonAnaliz.aspx', {
+            waitUntil: 'load',
             timeout: 90000
           });
           await new Promise(r => setTimeout(r, 5000));
           
+          // Step 2: Click on the fund link in the list
+          const linkSelector = `a[href*="FonKod=${uf.fund_code}"]`;
+          const link = await page.$(linkSelector);
+          
+          if (!link) {
+            console.log(`Fund link not found for ${uf.fund_code} on main page`);
+            // Take screenshot for debugging
+            await page.screenshot({ path: `debug-${uf.fund_code}.png` });
+            break;
+          }
+          
+          // Click the link and wait for navigation
+          await Promise.all([
+            page.waitForNavigation({ waitUntil: 'load', timeout: 90000 }),
+            link.click()
+          ]);
+          
+          await new Promise(r => setTimeout(r, 5000));
+          
+          // Step 3: Extract price from the loaded page
           const priceText = await page.evaluate(() => {
-            // Strategy 1: Look in common list containers
-            const selectors = [
-              '.top-list li',
-              '.main-indicators li',
-              '.price-indicators li',
-              '.fund-info li',
-              '.indicators li',
-              '[class*="indicator"] li',
-              '[class*="fiyat"]',
-              '[class*="price"]',
+            const strategies = [
+              // Strategy 1: Common list containers
+              () => {
+                const selectors = [
+                  '.top-list li',
+                  '.main-indicators li',
+                  '.price-indicators li',
+                  '.fund-info li',
+                  '.indicators li',
+                  '[class*="indicator"] li',
+                  '[class*="fiyat"]',
+                  '[class*="price"]',
+                ];
+                for (const sel of selectors) {
+                  const els = document.querySelectorAll(sel);
+                  for (const el of els) {
+                    const text = el.innerText.trim();
+                    if (text.includes('Son Fiyat') || text.includes('Son Fiyat (TL)')) {
+                      const match = text.match(/[\d,.]+/);
+                      if (match) return match[0];
+                    }
+                  }
+                }
+                return null;
+              },
+              // Strategy 2: Walk all elements containing "Son Fiyat"
+              () => {
+                const allElements = document.querySelectorAll('*');
+                for (const el of allElements) {
+                  const text = el.innerText?.trim();
+                  if (text && (text.includes('Son Fiyat (TL)') || text === 'Son Fiyat (TL)')) {
+                    const parent = el.parentElement;
+                    if (parent) {
+                      const parentText = parent.innerText.trim();
+                      const match = parentText.match(/[\d,.]+/);
+                      if (match) return match[0];
+                    }
+                    const next = el.nextElementSibling;
+                    if (next) {
+                      const match = next.innerText.trim().match(/[\d,.]+/);
+                      if (match) return match[0];
+                    }
+                  }
+                }
+                return null;
+              },
+              // Strategy 3: Search page text line by line
+              () => {
+                const bodyText = document.body.innerText;
+                const lines = bodyText.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                  if (lines[i].includes('Son Fiyat')) {
+                    for (let j = i; j < Math.min(i + 3, lines.length); j++) {
+                      const match = lines[j].match(/[\d,.]+/);
+                      if (match) return match[0];
+                    }
+                  }
+                }
+                return null;
+              }
             ];
             
-            for (const sel of selectors) {
-              const els = document.querySelectorAll(sel);
-              for (const el of els) {
-                const text = el.innerText.trim();
-                if (text.includes('Son Fiyat') || text.includes('Son Fiyat (TL)')) {
-                  const match = text.match(/[\d,.]+/);
-                  if (match) return match[0];
-                }
-              }
+            for (const strategy of strategies) {
+              const result = strategy();
+              if (result) return result;
             }
-            
-            // Strategy 2: Walk all elements and find one that contains "Son Fiyat"
-            const allElements = document.querySelectorAll('*');
-            for (const el of allElements) {
-              const text = el.innerText?.trim();
-              if (text && (text.includes('Son Fiyat (TL)') || text === 'Son Fiyat (TL)')) {
-                // Check siblings or children for numeric value
-                const parent = el.parentElement;
-                if (parent) {
-                  const parentText = parent.innerText.trim();
-                  const match = parentText.match(/[\d,.]+/);
-                  if (match) return match[0];
-                }
-                // Check next sibling
-                const next = el.nextElementSibling;
-                if (next) {
-                  const match = next.innerText.trim().match(/[\d,.]+/);
-                  if (match) return match[0];
-                }
-              }
-            }
-            
-            // Strategy 3: Search all text nodes for pattern "Son Fiyat" followed by number
-            const bodyText = document.body.innerText;
-            const lines = bodyText.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-              if (lines[i].includes('Son Fiyat')) {
-                // Check this line and next few lines
-                for (let j = i; j < Math.min(i + 3, lines.length); j++) {
-                  const match = lines[j].match(/[\d,.]+/);
-                  if (match) return match[0];
-                }
-              }
-            }
-            
             return null;
           });
           
           if (priceText && priceText !== '0') {
-            // Parse Turkish number format
             let normalized = priceText;
             if (normalized.includes(',')) {
               normalized = normalized.replace(/\./g, '').replace(',', '.');
@@ -146,12 +174,13 @@ async function main() {
               break;
             } else {
               console.log(`Invalid price for ${uf.fund_code}: "${priceText}" -> ${price}`);
-              success = true; // Don't retry for invalid prices
+              success = true;
               break;
             }
           } else {
-            console.log(`No price found for ${uf.fund_code} (page may show 0 or missing)`);
-            success = true; // Don't retry if page loads but no price
+            console.log(`No price found for ${uf.fund_code}, taking debug screenshot`);
+            await page.screenshot({ path: `debug-${uf.fund_code}.png` });
+            success = true;
             break;
           }
         } catch (err) {
