@@ -62,13 +62,26 @@ async function main() {
           page.setDefaultNavigationTimeout(180000);
           page.setDefaultTimeout(180000);
           
-          // Step 1: Go to main page with shorter wait
+          // Step 1: Go to main page and wait for links to load
           console.log(`  Loading main page...`);
           await page.goto('https://www.tefas.gov.tr/FonAnaliz.aspx', {
-            waitUntil: 'domcontentloaded',
+            waitUntil: 'load',
             timeout: 180000
           });
-          await new Promise(r => setTimeout(r, 8000));
+          
+          // Wait for any fund link to appear
+          try {
+            await page.waitForSelector('a[href*="FonKod="]', { timeout: 30000 });
+          } catch (e) {
+            console.log(`  No fund links found on page after 30s`);
+            const html = await page.content();
+            console.log(`  Page HTML length: ${html.length}`);
+            console.log(`  Contains 'FonKod': ${html.includes('FonKod')}`);
+            await page.close();
+            break;
+          }
+          
+          await new Promise(r => setTimeout(r, 3000));
           
           // Step 2: Find and click fund link
           const linkSelector = `a[href*="FonKod=${uf.fund_code}"]`;
@@ -76,6 +89,13 @@ async function main() {
           
           if (!link) {
             console.log(`  Fund link not found for ${uf.fund_code}`);
+            // List available links for debugging
+            const availableLinks = await page.evaluate(() => {
+              return Array.from(document.querySelectorAll('a[href*="FonKod="]'))
+                .map(a => a.getAttribute('href'))
+                .slice(0, 5);
+            });
+            console.log(`  Available links sample:`, availableLinks);
             await page.close();
             break;
           }
