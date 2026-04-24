@@ -20,7 +20,10 @@ export function useCreateAccount() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (account: Omit<Account, 'id' | 'user_id' | 'created_at'>) => {
-      const { data, error } = await supabase.from('accounts').insert(account as any).select().single();
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error('Oturum bulunamadı');
+      const { data, error } = await supabase.from('accounts').insert({ ...account, user_id: userId } as any).select().single();
       if (error) throw error;
       return data;
     },
@@ -69,7 +72,10 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {
-      const { data, error } = await supabase.from('transactions').insert(transaction as any).select().single();
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error('Oturum bulunamadı');
+      const { data, error } = await supabase.from('transactions').insert({ ...transaction, user_id: userId } as any).select().single();
       if (error) throw error;
       return data;
     },
@@ -180,8 +186,12 @@ export function useCreateUserFund() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userFund: Omit<UserFund, 'id' | 'user_id' | 'current_price' | 'last_price_update' | 'created_at'>) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error('Oturum bulunamadı');
       const { data, error } = await supabase.from('user_funds').insert({
         ...userFund,
+        user_id: userId,
         current_price: userFund.purchase_price,
       } as any).select().single();
       if (error) throw error;
