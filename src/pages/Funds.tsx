@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useFunds, useUserFunds, useCreateUserFund, useUpdateUserFund, useDeleteUserFund } from '../hooks/useSupabase';
 import { formatTRY, formatPercent } from '../lib/utils';
 import { Plus, Search, RefreshCw, Trash2, TrendingUp, Download } from 'lucide-react';
 import Modal from '../components/Modal';
 
 export default function Funds() {
+  const { user } = useAuth();
   const { data: allFunds, isLoading: fundsLoading } = useFunds();
   const { data: userFunds, isLoading: userFundsLoading } = useUserFunds();
   const createUserFund = useCreateUserFund();
@@ -39,13 +41,18 @@ export default function Funds() {
       alert('Lütfen bir fon seçin');
       return;
     }
+    if (!user?.id) {
+      alert('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+      return;
+    }
     try {
-      await createUserFund.mutateAsync(form);
+      await createUserFund.mutateAsync({ ...form, user_id: user.id });
       setAddModalOpen(false);
       setForm({ fund_code: '', shares: 0, purchase_price: 0 });
       setSearchQuery('');
     } catch (err: any) {
-      alert('Hata: ' + (err.message || 'Fon eklenemedi'));
+      console.error('Fund error:', err);
+      alert('Hata: ' + (err?.message || err?.error_description || JSON.stringify(err) || 'Fon eklenemedi'));
     }
   };
 

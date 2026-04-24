@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useTransactions, useAccounts, useCategories, useCreateTransaction, useDeleteTransaction } from '../hooks/useSupabase';
 import { formatCurrency, formatDate } from '../lib/utils';
-import { Plus, Trash2, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter } from 'lucide-react';
+import { Plus, Trash2, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import Modal from '../components/Modal';
 import type { TransactionType, CurrencyCode } from '../types';
 
 export default function Transactions() {
+  const { user } = useAuth();
   const { data: transactions, isLoading } = useTransactions();
   const { data: accounts } = useAccounts();
   const { data: categories } = useCategories();
@@ -14,6 +16,10 @@ export default function Transactions() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [filterType, setFilterType] = useState<TransactionType | 'all'>('all');
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [form, setForm] = useState({
     account_id: '',
     type: 'expense' as TransactionType,
@@ -26,8 +32,12 @@ export default function Transactions() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) {
+      alert('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+      return;
+    }
     try {
-      await createTransaction.mutateAsync(form);
+      await createTransaction.mutateAsync({ ...form, user_id: user.id });
       setModalOpen(false);
       setForm({
         account_id: '',
@@ -39,13 +49,25 @@ export default function Transactions() {
         transaction_date: new Date().toISOString().split('T')[0],
       });
     } catch (err: any) {
-      alert('Hata: ' + (err.message || 'İşlem eklenemedi'));
+      console.error('Transaction error:', err);
+      alert('Hata: ' + (err?.message || err?.error_description || JSON.stringify(err) || 'İşlem eklenemedi'));
     }
   };
 
-  const filteredTransactions = transactions?.filter((tx) =>
-    filterType === 'all' ? true : tx.type === filterType
-  );
+  const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
+  const filteredTransactions = transactions?.filter((tx) => {
+    const txDate = new Date(tx.transaction_date);
+    const inMonth = txDate >= monthStart && txDate <= monthEnd;
+    const inType = filterType === 'all' ? true : tx.type === filterType;
+    return inMonth && inType;
+  });
+
+  const monthLabel = currentMonth.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' });
+
+  const goPrevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  const goNextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
 
   const getTypeIcon = (type: TransactionType) => {
     switch (type) {
@@ -89,6 +111,17 @@ export default function Transactions() {
         >
           <Plus size={18} />
           <span>Yeni İşlem</span>
+        </button>
+      </div>
+
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 p-3">
+        <button onClick={goPrevMonth} className="p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors text-gray-600 dark:text-slate-400">
+          <ChevronLeft size={20} />
+        </button>
+        <span className="font-semibold text-gray-800 dark:text-white">{monthLabel}</span>
+        <button onClick={goNextMonth} className="p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors text-gray-600 dark:text-slate-400">
+          <ChevronRight size={20} />
         </button>
       </div>
 

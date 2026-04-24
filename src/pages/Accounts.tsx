@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useExchangeRates } from '../hooks/useSupabase';
 import { formatCurrency } from '../lib/utils';
 import { Plus, Pencil, Trash2, Wallet, Landmark, CreditCard, FileText, TrendingUp, PieChart } from 'lucide-react';
@@ -19,6 +20,7 @@ const CURRENCIES: CurrencyCode[] = ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY', 'X
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 export default function Accounts() {
+  const { user } = useAuth();
   const { data: accounts, isLoading } = useAccounts();
   const { data: exchangeRates } = useExchangeRates();
   const createAccount = useCreateAccount();
@@ -48,9 +50,14 @@ export default function Accounts() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) {
+      alert('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+      return;
+    }
     try {
       const data = { 
         ...form, 
+        user_id: user.id,
         initial_balance: form.balance,
         balance: form.type === 'credit_card' || form.type === 'loan' ? -Math.abs(form.balance) : form.balance
       };
@@ -63,7 +70,8 @@ export default function Accounts() {
       setModalOpen(false);
       resetForm();
     } catch (err: any) {
-      alert('Hata: ' + (err.message || 'Hesap eklenemedi'));
+      console.error('Account error:', err);
+      alert('Hata: ' + (err?.message || err?.error_description || JSON.stringify(err) || 'Hesap eklenemedi'));
     }
   };
 

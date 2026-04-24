@@ -19,11 +19,8 @@ export function useAccounts() {
 export function useCreateAccount() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (account: Omit<Account, 'id' | 'user_id' | 'created_at'>) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      if (!userId) throw new Error('Oturum bulunamadı');
-      const { data, error } = await supabase.from('accounts').insert({ ...account, user_id: userId } as any).select().single();
+    mutationFn: async (account: Omit<Account, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase.from('accounts').insert(account as any).select().single();
       if (error) throw error;
       return data;
     },
@@ -71,11 +68,8 @@ export function useTransactions() {
 export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at'>) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      if (!userId) throw new Error('Oturum bulunamadı');
-      const { data, error } = await supabase.from('transactions').insert({ ...transaction, user_id: userId } as any).select().single();
+    mutationFn: async (transaction: Omit<Transaction, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase.from('transactions').insert(transaction as any).select().single();
       if (error) throw error;
       return data;
     },
@@ -106,7 +100,13 @@ export function useCategories() {
     queryFn: async () => {
       const { data, error } = await supabase.from('categories').select('*').order('name');
       if (error) throw error;
-      return data as Category[];
+      // Remove duplicates by name (same user may have duplicate entries)
+      const seen = new Set<string>();
+      return (data as Category[]).filter((cat) => {
+        if (seen.has(cat.name)) return false;
+        seen.add(cat.name);
+        return true;
+      });
     },
   });
 }
@@ -185,13 +185,9 @@ export function useUserFunds() {
 export function useCreateUserFund() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (userFund: Omit<UserFund, 'id' | 'user_id' | 'current_price' | 'last_price_update' | 'created_at'>) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      if (!userId) throw new Error('Oturum bulunamadı');
+    mutationFn: async (userFund: Omit<UserFund, 'id' | 'current_price' | 'last_price_update' | 'created_at'>) => {
       const { data, error } = await supabase.from('user_funds').insert({
         ...userFund,
-        user_id: userId,
         current_price: userFund.purchase_price,
       } as any).select().single();
       if (error) throw error;

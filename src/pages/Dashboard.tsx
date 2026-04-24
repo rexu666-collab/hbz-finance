@@ -4,7 +4,7 @@ import { formatTRY, formatCurrency } from '../lib/utils';
 import { 
   TrendingUp, TrendingDown, Wallet, CreditCard, 
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
-  Coins, Gem
+  Coins, Gem, Calendar, CalendarDays, CalendarRange, CalendarCheck
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
@@ -66,7 +66,21 @@ export default function Dashboard() {
 
   const pieData = Object.entries(accountDistribution || {}).map(([name, value]) => ({ name, value }));
 
-  // Net worth history (mock data for now - will be real when net_worth_history is populated)
+  // Returns calculation
+  const getPeriodReturn = (days: number) => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const periodTx = transactions?.filter(tx => new Date(tx.transaction_date) >= cutoff) || [];
+    const income = periodTx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
+    const expense = periodTx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
+    return income - expense;
+  };
+
+  const dailyReturn = getPeriodReturn(1);
+  const weeklyReturn = getPeriodReturn(7);
+  const monthlyReturn = getPeriodReturn(30);
+  const yearlyReturn = getPeriodReturn(365);
+
   const netWorthHistory = [
     { date: '01.04', value: netWorth * 0.95 },
     { date: '05.04', value: netWorth * 0.97 },
@@ -107,28 +121,83 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Net Worth Card - Hero */}
+      {/* Returns */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <ReturnCard label="Günlük Getiri" value={dailyReturn} icon={<Calendar size={18} />} />
+        <ReturnCard label="Haftalık Getiri" value={weeklyReturn} icon={<CalendarDays size={18} />} />
+        <ReturnCard label="Aylık Getiri" value={monthlyReturn} icon={<CalendarRange size={18} />} />
+        <ReturnCard label="Yıllık Getiri" value={yearlyReturn} icon={<CalendarCheck size={18} />} />
+      </div>
+
+      {/* Net Worth Card - Hero with Pie Chart */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 text-white shadow-xl shadow-indigo-500/20">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
         </div>
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-indigo-100 text-sm font-medium">Net Varlık</span>
-            <TrendingUp size={20} className="text-indigo-200" />
-          </div>
-          <div className="text-4xl font-bold mb-4">{formatTRY(netWorth)}</div>
-          <div className="flex gap-6 text-sm">
-            <div className="flex items-center gap-1.5">
-              <ArrowUpRight size={16} className="text-emerald-300" />
-              <span className="text-indigo-100">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-indigo-100 text-sm font-medium">Net Varlık</span>
+              <TrendingUp size={20} className="text-indigo-200" />
             </div>
-            <div className="flex items-center gap-1.5">
-              <ArrowDownRight size={16} className="text-red-300" />
-              <span className="text-indigo-100">Borç: {formatTRY(totalLiabilities)}</span>
+            <div className="text-4xl font-bold mb-4">{formatTRY(netWorth)}</div>
+            <div className="flex gap-6 text-sm">
+              <div className="flex items-center gap-1.5">
+                <ArrowUpRight size={16} className="text-emerald-300" />
+                <span className="text-indigo-100">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ArrowDownRight size={16} className="text-red-300" />
+                <span className="text-indigo-100">Borç: {formatTRY(totalLiabilities)}</span>
+              </div>
             </div>
           </div>
+          
+          {/* Pie Chart inside hero card */}
+          {pieData.length > 0 && (
+            <div className="w-full md:w-48 h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={35}
+                    outerRadius={55}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {pieData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value: any) => formatTRY(Number(value))}
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                      border: 'none', 
+                      borderRadius: '12px',
+                      color: '#fff',
+                      fontSize: '12px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-2 justify-center -mt-2">
+                {pieData.slice(0, 3).map((entry, index) => (
+                  <div key={entry.name} className="flex items-center gap-1 text-[10px] text-indigo-100">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    <span>{entry.name}</span>
+                  </div>
+                ))}
+                {pieData.length > 3 && (
+                  <span className="text-[10px] text-indigo-200">+{pieData.length - 3}</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -160,82 +229,32 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Asset Distribution */}
-        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Varlık Dağılımı</h3>
-          {pieData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={85}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {pieData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: any) => formatTRY(Number(value))}
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                      border: 'none', 
-                      borderRadius: '12px',
-                      color: '#fff'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-3 justify-center mt-2">
-                {pieData.map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-slate-400">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                    <span>{entry.name}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="h-[220px] flex items-center justify-center text-slate-400">
-              Henüz veri yok
-            </div>
-          )}
-        </div>
-
-        {/* Net Worth Trend */}
-        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Net Varlık Trendi</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={netWorthHistory}>
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
-              <Tooltip 
-                formatter={(value: any) => formatTRY(Number(value))}
-                contentStyle={{ 
-                  backgroundColor: 'rgba(15, 23, 42, 0.9)', 
-                  border: 'none', 
-                  borderRadius: '12px',
-                  color: '#fff'
-                }}
-              />
-              <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorValue)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Net Worth Trend */}
+      <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm card-hover">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Net Varlık Trendi</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <AreaChart data={netWorthHistory}>
+            <defs>
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
+            <Tooltip 
+              formatter={(value: any) => formatTRY(Number(value))}
+              contentStyle={{ 
+                backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+                border: 'none', 
+                borderRadius: '12px',
+                color: '#fff'
+              }}
+            />
+            <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorValue)" />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Recent Transactions */}
@@ -285,6 +304,23 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ReturnCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
+  const isPositive = value >= 0;
+  return (
+    <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-4 border border-gray-300 dark:border-slate-700 shadow-sm">
+      <div className="flex items-center gap-2 mb-2">
+        <div className={`p-1.5 rounded-lg ${isPositive ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
+          {icon}
+        </div>
+        <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider">{label}</p>
+      </div>
+      <p className={`text-lg font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+        {isPositive ? '+' : ''}{formatTRY(value)}
+      </p>
     </div>
   );
 }
