@@ -139,10 +139,46 @@ export function useExchangeRates() {
   return useQuery({
     queryKey: ['exchange_rates'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('exchange_rates').select('*');
-      if (error) throw error;
-      return data as ExchangeRate[];
+      // Fetch live doviz rates from free API (TRY base -> inverse to get rate_to_try)
+      const res = await fetch('https://open.er-api.com/v6/latest/TRY');
+      const json = await res.json();
+      if (json.result !== 'success') throw new Error('Exchange rate API failed');
+
+      const apiRates: ExchangeRate[] = [];
+      const dovizCodes = ['USD', 'EUR', 'GBP', 'CHF', 'JPY'];
+
+      for (const code of dovizCodes) {
+        const val = json.rates?.[code];
+        if (typeof val === 'number') {
+          apiRates.push({
+            currency_code: code as any,
+            rate_to_try: 1 / val,
+            rate_type: 'doviz',
+            updated_at: new Date().toISOString(),
+          });
+        }
+      }
+
+      // TRY is always 1
+      apiRates.push({
+        currency_code: 'TRY',
+        rate_to_try: 1,
+        rate_type: 'doviz',
+        updated_at: new Date().toISOString(),
+      });
+
+      // Fallback: fetch altin rates from Supabase (not available in free API)
+      const { data: sbRates, error } = await supabase
+        .from('exchange_rates')
+        .select('*')
+        .in('currency_code', ['XAU', 'XAG', 'CUM', 'YAR', 'TAM']);
+      if (!error && sbRates) {
+        apiRates.push(...(sbRates as ExchangeRate[]));
+      }
+
+      return apiRates;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -150,31 +186,23 @@ export function useUpdateExchangeRates() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch('https://www.tcmb.gov.tr/kurlar/today.xml');
-      const xmlText = await response.text();
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-      const currencies = xmlDoc.querySelectorAll('Currency');
-      
-      const rates: Partial<ExchangeRate>[] = [];
-      
-      currencies.forEach((currency) => {
-        const code = currency.getAttribute('Kod');
-        const forexBuying = currency.querySelector('ForexBuying')?.textContent;
-        if (code && forexBuying) {
-          rates.push({
-            currency_code: code as any,
-            rate_to_try: parseFloat(forexBuying),
-            rate_type: ['XAU', 'XAG', 'CUM', 'YAR', 'TAM'].includes(code) ? 'altin' : 'doviz',
-            updated_at: new Date().toISOString(),
-          });
-        }
-      });
+      const res = await fetch('https://open.er-api.com/v6/latest/TRY');
+      const json = await res.json();
+      if (json.result !== 'success') throw new Error('Exchange rate API failed');
+
+      const rates: Partial<ExchangeRate>[] = [
+        { currency_code: 'USD', rate_to_try: 1 / json.rates.USD, rate_type: 'doviz' },
+        { currency_code: 'EUR', rate_to_try: 1 / json.rates.EUR, rate_type: 'doviz' },
+        { currency_code: 'GBP', rate_to_try: 1 / json.rates.GBP, rate_type: 'doviz' },
+        { currency_code: 'CHF', rate_to_try: 1 / json.rates.CHF, rate_type: 'doviz' },
+        { currency_code: 'JPY', rate_to_try: 1 / json.rates.JPY, rate_type: 'doviz' },
+        { currency_code: 'TRY', rate_to_try: 1, rate_type: 'doviz' },
+      ];
 
       for (const rate of rates) {
         await supabase.from('exchange_rates').upsert(rate as any, { onConflict: 'currency_code' });
       }
-      
+
       return rates;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exchange_rates'] }),

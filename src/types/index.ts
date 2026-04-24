@@ -5,8 +5,9 @@ export interface Profile {
   created_at: string;
 }
 
-export type AccountType = 'cash' | 'bank' | 'credit_card' | 'loan' | 'investment' | 'fund';
+export type AccountType = 'bank';
 export type TransactionType = 'income' | 'expense' | 'transfer';
+export type PaymentMethod = 'havale' | 'eft' | 'credit_card' | 'cash' | 'other';
 export type CurrencyCode = 'TRY' | 'USD' | 'EUR' | 'GBP' | 'CHF' | 'JPY' | 'XAU' | 'XAG' | 'CUM' | 'YAR' | 'TAM';
 
 export interface Account {
@@ -31,6 +32,7 @@ export interface Transaction {
   amount: number;
   currency: CurrencyCode;
   description: string;
+  payment_method: PaymentMethod;
   transaction_date: string;
   created_at: string;
 }
@@ -108,12 +110,15 @@ export const CURRENCY_LABELS: Record<string, string> = {
 };
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
-  cash: 'Nakit',
   bank: 'Banka Hesabı',
+};
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  havale: 'Havale',
+  eft: 'EFT',
   credit_card: 'Kredi Kartı',
-  loan: 'Kredi',
-  investment: 'Yatırım',
-  fund: 'Yatırım Fonu',
+  cash: 'Nakit',
+  other: 'Diğer',
 };
 
 export const ACCOUNT_COLORS = [

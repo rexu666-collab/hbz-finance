@@ -3,9 +3,17 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useTransactions, useAccounts, useCategories, useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from '../hooks/useSupabase';
 import { formatCurrency, formatDate, formatTRY } from '../lib/utils';
-import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight, CreditCard, Wallet, Landmark, Zap } from 'lucide-react';
 import Modal from '../components/Modal';
-import type { TransactionType, CurrencyCode } from '../types';
+import type { TransactionType, CurrencyCode, PaymentMethod } from '../types';
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ReactNode }[] = [
+  { value: 'havale', label: 'Havale', icon: <Landmark size={14} /> },
+  { value: 'eft', label: 'EFT', icon: <Zap size={14} /> },
+  { value: 'credit_card', label: 'Kredi Kartı', icon: <CreditCard size={14} /> },
+  { value: 'cash', label: 'Nakit', icon: <Wallet size={14} /> },
+  { value: 'other', label: 'Diğer', icon: <ArrowLeftRight size={14} /> },
+];
 
 export default function Transactions() {
   const { user } = useAuth();
@@ -31,6 +39,7 @@ export default function Transactions() {
     amount: 0,
     currency: 'TRY' as CurrencyCode,
     description: '',
+    payment_method: 'other' as PaymentMethod,
     transaction_date: new Date().toISOString().split('T')[0],
   });
 
@@ -57,6 +66,7 @@ export default function Transactions() {
         amount: 0,
         currency: 'TRY',
         description: '',
+        payment_method: 'other',
         transaction_date: new Date().toISOString().split('T')[0],
       });
     } catch (err: any) {
@@ -74,6 +84,7 @@ export default function Transactions() {
       amount: tx.amount,
       currency: tx.currency,
       description: tx.description || '',
+      payment_method: tx.payment_method || 'other',
       transaction_date: tx.transaction_date,
     });
     setModalOpen(true);
@@ -126,13 +137,18 @@ export default function Transactions() {
     }
   };
 
+  const getPaymentMethodLabel = (method: PaymentMethod) => {
+    const found = PAYMENT_METHODS.find(m => m.value === method);
+    return found?.label || method;
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg skeleton" />
+        <div className="h-8 w-48 bg-gray-300 dark:bg-slate-700 rounded-lg skeleton" />
         <div className="space-y-2">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-16 bg-slate-200 dark:bg-slate-700 rounded-xl skeleton" />
+            <div key={i} className="h-16 bg-gray-300 dark:bg-slate-700 rounded-xl skeleton" />
           ))}
         </div>
       </div>
@@ -193,7 +209,7 @@ export default function Transactions() {
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
               filterType === type
                 ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
-                : 'bg-gray-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-gray-300 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 border border-gray-300 dark:border-slate-700 hover:border-gray-400 dark:hover:border-slate-600'
             }`}
           >
             {type === 'all' ? 'Tümü' : getTypeLabel(type)}
@@ -205,7 +221,7 @@ export default function Transactions() {
       <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="divide-y divide-gray-100 dark:divide-slate-700">
           {filteredTransactions?.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-gray-400">
               <Filter size={32} className="mx-auto mb-2 opacity-50" />
               <p>Henüz işlem yok</p>
             </div>
@@ -233,6 +249,12 @@ export default function Transactions() {
                         <>
                           <span>•</span>
                           <span>{tx.categories.name}</span>
+                        </>
+                      )}
+                      {tx.payment_method && (
+                        <>
+                          <span>•</span>
+                          <span className="text-indigo-500 font-medium">{getPaymentMethodLabel(tx.payment_method)}</span>
                         </>
                       )}
                     </div>
@@ -306,6 +328,27 @@ export default function Transactions() {
                 <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Ödeme Yöntemi</label>
+            <div className="grid grid-cols-3 gap-2">
+              {PAYMENT_METHODS.map((method) => (
+                <button
+                  key={method.value}
+                  type="button"
+                  onClick={() => setForm({ ...form, payment_method: method.value })}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-medium transition-all ${
+                    form.payment_method === method.value
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                      : 'border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {method.icon}
+                  <span>{method.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>

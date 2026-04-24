@@ -2,7 +2,7 @@ import { useAccounts, useTransactions, useUserFunds, useExchangeRates } from '..
 import { useAuth } from '../contexts/AuthContext';
 import { formatTRY, formatCurrency } from '../lib/utils';
 import { 
-  TrendingUp, TrendingDown, Wallet, CreditCard, 
+  TrendingUp, TrendingDown, 
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
   Coins, Gem, Calendar, CalendarDays, CalendarRange, CalendarCheck,
   DollarSign, Euro, PoundSterling, Gem as GemIcon
@@ -33,31 +33,28 @@ export default function Dashboard() {
   };
 
   const totalAssets = accounts?.reduce((sum, acc) => {
-    const value = getAccountValueTRY(acc);
-    return acc.type === 'credit_card' || acc.type === 'loan' ? sum : sum + value;
-  }, 0) || 0;
-
-  const totalLiabilities = accounts?.reduce((sum, acc) => {
-    const value = getAccountValueTRY(acc);
-    return acc.type === 'credit_card' || acc.type === 'loan' ? sum + Math.abs(value) : sum;
+    return sum + getAccountValueTRY(acc);
   }, 0) || 0;
 
   const fundTotal = userFunds?.reduce((sum, uf) => {
     return sum + (uf.shares * uf.current_price);
   }, 0) || 0;
 
-  const netWorth = totalAssets - totalLiabilities + fundTotal;
+  const netWorth = totalAssets + fundTotal;
+
+  // Monthly income/expense for summary cards
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonthTx = transactions?.filter(tx => new Date(tx.transaction_date) >= monthStart) || [];
+  const monthIncome = thisMonthTx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
+  const monthExpense = thisMonthTx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
 
   const recentTransactions = transactions?.slice(0, 5) || [];
 
   // Account distribution for pie chart
   const accountDistribution = accounts?.reduce((acc: Record<string, number>, account) => {
     const value = getAccountValueTRY(account);
-    if (account.type === 'credit_card' || account.type === 'loan') return acc;
-    const typeLabel = account.type === 'cash' ? 'Nakit' : 
-                     account.type === 'bank' ? 'Banka' : 
-                     account.type === 'investment' ? 'Yatırım' : 'Diğer';
-    acc[typeLabel] = (acc[typeLabel] || 0) + value;
+    acc['Banka'] = (acc['Banka'] || 0) + value;
     return acc;
   }, {});
 
@@ -219,10 +216,12 @@ export default function Dashboard() {
                 <ArrowUpRight size={16} className="text-emerald-300" />
                 <span className="text-white/80">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
-                <ArrowDownRight size={16} className="text-red-300" />
-                <span className="text-white/80">Borç: {formatTRY(totalLiabilities)}</span>
-              </div>
+              {fundTotal > 0 && (
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
+                  <ArrowDownRight size={16} className="text-purple-300" />
+                  <span className="text-white/80">Fonlar: {formatTRY(fundTotal)}</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -278,10 +277,10 @@ export default function Dashboard() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: <Wallet size={22} />, label: 'Nakit', value: accounts?.filter(a => a.type === 'cash').reduce((s, a) => s + getAccountValueTRY(a), 0) || 0, gradient: 'from-emerald-400 to-teal-500', color: '#10b981' },
-          { icon: <Landmark size={22} />, label: 'Banka', value: accounts?.filter(a => a.type === 'bank').reduce((s, a) => s + getAccountValueTRY(a), 0) || 0, gradient: 'from-blue-400 to-indigo-500', color: '#3b82f6' },
-          { icon: <CreditCard size={22} />, label: 'Kredi Kartı', value: Math.abs(accounts?.filter(a => a.type === 'credit_card').reduce((s, a) => s + getAccountValueTRY(a), 0) || 0), gradient: 'from-red-400 to-pink-500', color: '#ef4444' },
+          { icon: <Landmark size={22} />, label: 'Banka', value: totalAssets, gradient: 'from-blue-400 to-indigo-500', color: '#3b82f6' },
           { icon: <Coins size={22} />, label: 'Fonlar', value: fundTotal, gradient: 'from-purple-400 to-violet-500', color: '#8b5cf6' },
+          { icon: <TrendingUp size={22} />, label: 'Bu Ay Gelir', value: monthIncome, gradient: 'from-emerald-400 to-teal-500', color: '#10b981' },
+          { icon: <TrendingDown size={22} />, label: 'Bu Ay Gider', value: monthExpense, gradient: 'from-red-400 to-pink-500', color: '#ef4444' },
         ].map((card) => (
           <div
             key={card.label}

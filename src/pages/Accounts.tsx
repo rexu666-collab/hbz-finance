@@ -3,22 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useExchangeRates } from '../hooks/useSupabase';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Pencil, Trash2, Wallet, Landmark, CreditCard, FileText, TrendingUp, PieChart } from 'lucide-react';
+import { Plus, Pencil, Trash2, Landmark } from 'lucide-react';
 import Modal from '../components/Modal';
-import type { AccountType, CurrencyCode } from '../types';
-
-const ACCOUNT_TYPES: { value: AccountType; label: string; icon: React.ReactNode }[] = [
-  { value: 'cash', label: 'Nakit', icon: <Wallet size={18} /> },
-  { value: 'bank', label: 'Banka Hesabı', icon: <Landmark size={18} /> },
-  { value: 'credit_card', label: 'Kredi Kartı', icon: <CreditCard size={18} /> },
-  { value: 'loan', label: 'Kredi', icon: <FileText size={18} /> },
-  { value: 'investment', label: 'Yatırım', icon: <TrendingUp size={18} /> },
-  { value: 'fund', label: 'Yatırım Fonu', icon: <PieChart size={18} /> },
-];
+import type { CurrencyCode } from '../types';
 
 const CURRENCIES: CurrencyCode[] = ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY', 'XAU', 'XAG', 'CUM', 'YAR', 'TAM'];
 
-const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'];
 
 export default function Accounts() {
   const { user } = useAuth();
@@ -33,11 +24,11 @@ export default function Accounts() {
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [form, setForm] = useState({
     name: '',
-    type: 'cash' as AccountType,
+    type: 'bank' as const,
     currency: 'TRY' as CurrencyCode,
     balance: 0,
-    color: '#6366f1',
-    icon: 'wallet',
+    color: '#2563eb',
+    icon: 'landmark',
   });
 
   const getRate = (currency: CurrencyCode) => {
@@ -46,7 +37,7 @@ export default function Accounts() {
   };
 
   const resetForm = () => {
-    setForm({ name: '', type: 'cash', currency: 'TRY', balance: 0, color: '#6366f1', icon: 'wallet' });
+    setForm({ name: '', type: 'bank', currency: 'TRY', balance: 0, color: '#2563eb', icon: 'landmark' });
     setEditingAccount(null);
   };
 
@@ -61,7 +52,7 @@ export default function Accounts() {
         ...form, 
         user_id: user.id,
         initial_balance: form.balance,
-        balance: form.type === 'credit_card' || form.type === 'loan' ? -Math.abs(form.balance) : form.balance
+        balance: form.balance
       };
       
       if (editingAccount) {
@@ -83,11 +74,11 @@ export default function Accounts() {
     setEditingAccount(account);
     setForm({
       name: account.name,
-      type: account.type,
+      type: 'bank',
       currency: account.currency,
       balance: Math.abs(account.balance),
-      color: account.color || '#6366f1',
-      icon: account.icon || 'wallet',
+      color: account.color || '#2563eb',
+      icon: account.icon || 'landmark',
     });
     setModalOpen(true);
   };
@@ -106,10 +97,10 @@ export default function Accounts() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg skeleton" />
+        <div className="h-8 w-48 bg-gray-300 dark:bg-slate-700 rounded-lg skeleton" />
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-40 bg-slate-200 dark:bg-slate-700 rounded-2xl skeleton" />
+            <div key={i} className="h-40 bg-gray-300 dark:bg-slate-700 rounded-2xl skeleton" />
           ))}
         </div>
       </div>
@@ -120,8 +111,8 @@ export default function Accounts() {
     <div className="space-y-6 fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Hesaplarım</h1>
-          <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">Tüm finansal hesaplarınızı yönetin</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Banka Hesaplarım</h1>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">Tüm banka hesaplarınızı yönetin</p>
         </div>
         <button
           onClick={() => { resetForm(); setModalOpen(true); }}
@@ -135,8 +126,6 @@ export default function Accounts() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {accounts?.map((account) => {
           const tryValue = account.balance * getRate(account.currency);
-          const isNegative = account.type === 'credit_card' || account.type === 'loan';
-          const typeInfo = ACCOUNT_TYPES.find(t => t.value === account.type);
 
           return (
             <div key={account.id} className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm card-hover group">
@@ -144,19 +133,19 @@ export default function Accounts() {
                 <div className="flex items-center gap-3">
                   <div
                     className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-lg"
-                    style={{ backgroundColor: account.color || '#6366f1' }}
+                    style={{ backgroundColor: account.color || '#2563eb' }}
                   >
-                    {typeInfo?.icon}
+                    <Landmark size={18} />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-800 dark:text-white">{account.name}</h3>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">{typeInfo?.label}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Banka Hesabı</p>
                   </div>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleEdit(account)}
-                    className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-slate-400 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-400 transition-colors"
                   >
                     <Pencil size={14} />
                   </button>
@@ -170,7 +159,7 @@ export default function Accounts() {
               </div>
 
               <div className="space-y-1">
-                <p className={`text-2xl font-bold ${isNegative ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-white'}`}>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">
                   {formatCurrency(account.balance, account.currency)}
                 </p>
                 {account.currency !== 'TRY' && (
@@ -186,7 +175,7 @@ export default function Accounts() {
 
       {accounts?.length === 0 && (
         <div className="text-center py-16 bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
-          <Wallet size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+          <Landmark size={48} className="mx-auto text-gray-300 dark:text-slate-600 mb-4" />
           <p className="text-gray-500 dark:text-slate-400">Henüz hesap eklemediniz</p>
           <button onClick={() => setModalOpen(true)} className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium">
             İlk Hesabınızı Ekleyin
@@ -197,7 +186,7 @@ export default function Accounts() {
       <Modal
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); resetForm(); }}
-        title={editingAccount ? 'Hesap Düzenle' : 'Yeni Hesap'}
+        title={editingAccount ? 'Hesap Düzenle' : 'Yeni Banka Hesabı'}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -210,27 +199,6 @@ export default function Accounts() {
               placeholder="Örn: Ziraat Bankası"
               required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Hesap Tipi</label>
-            <div className="grid grid-cols-2 gap-2">
-              {ACCOUNT_TYPES.map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  onClick={() => setForm({ ...form, type: type.value })}
-                  className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                    form.type === type.value
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                      : 'border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {type.icon}
-                  <span className="text-sm">{type.label}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -267,7 +235,7 @@ export default function Accounts() {
                   key={color}
                   type="button"
                   onClick={() => setForm({ ...form, color })}
-                  className={`w-8 h-8 rounded-full transition-transform ${form.color === color ? 'scale-125 ring-2 ring-offset-2 ring-slate-400 dark:ring-slate-600' : ''}`}
+                  className={`w-8 h-8 rounded-full transition-transform ${form.color === color ? 'scale-125 ring-2 ring-offset-2 ring-gray-400 dark:ring-gray-600' : ''}`}
                   style={{ backgroundColor: color }}
                 />
               ))}

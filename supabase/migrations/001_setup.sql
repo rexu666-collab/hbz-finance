@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('cash', 'bank', 'credit_card', 'loan', 'investment', 'fund')),
+  type TEXT NOT NULL CHECK (type IN ('bank')),
   currency TEXT NOT NULL DEFAULT 'TRY',
   balance DECIMAL(15,2) NOT NULL DEFAULT 0,
   initial_balance DECIMAL(15,2) NOT NULL DEFAULT 0,
@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   amount DECIMAL(15,2) NOT NULL DEFAULT 0,
   currency TEXT NOT NULL DEFAULT 'TRY',
   description TEXT,
+  payment_method TEXT DEFAULT 'other',
   transaction_date DATE NOT NULL DEFAULT CURRENT_DATE,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -163,3 +164,21 @@ INSERT INTO exchange_rates (currency_code, rate_to_try, rate_type) VALUES
   ('YAR', 7000, 'altin'),
   ('TAM', 14000, 'altin')
 ON CONFLICT (currency_code) DO NOTHING;
+
+-- Migrations for existing databases
+
+-- 1. Add payment_method column to transactions if missing
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'other';
+
+-- 2. Normalize old account types to 'bank' before restricting constraint
+UPDATE accounts SET type = 'bank' WHERE type NOT IN ('bank');
+
+-- 3. Replace accounts type check constraint with only 'bank'
+DO $$
+BEGIN
+  ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_type_check;
+  ALTER TABLE accounts ADD CONSTRAINT accounts_type_check CHECK (type IN ('bank'));
+EXCEPTION
+  WHEN others THEN
+    NULL;
+END $$;
