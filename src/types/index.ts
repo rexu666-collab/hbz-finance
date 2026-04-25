@@ -37,6 +37,9 @@ export interface Transaction {
   installment_count: number;
   installment_number: number;
   parent_transaction_id: string | null;
+  is_recurring: boolean;
+  recurring_interval: string | null;
+  recurring_day: number | null;
   transaction_date: string;
   created_at: string;
 }

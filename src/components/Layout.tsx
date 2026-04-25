@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import Navigation from './Navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Menu, X, Moon, Sun } from 'lucide-react';
+import { LogOut, Menu, X, Moon, Sun, Eye, EyeOff } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSensitive } from '../contexts/SensitiveContext';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
+  const { hidden, toggle } = useSensitive();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -41,6 +43,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Navigation />
           </div>
           <div className="mt-auto p-4 border-t border-gray-200 dark:border-slate-800 space-y-2">
+            <button
+              onClick={toggle}
+              className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-800 transition-colors"
+            >
+              {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
+              <span>{hidden ? 'Verileri Göster' : 'Verileri Gizle'}</span>
+            </button>
             <button
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-800 transition-colors"

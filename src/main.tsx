@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
+import { SensitiveProvider } from './contexts/SensitiveContext'
 import './index.css'
 import App from './App'
 
@@ -24,7 +25,9 @@ createRoot(document.getElementById('root')!).render(
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>
-              <App />
+              <SensitiveProvider>
+                <App />
+              </SensitiveProvider>
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>

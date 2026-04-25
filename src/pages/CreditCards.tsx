@@ -3,7 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useCreditCards, useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from '../hooks/useSupabase';
 import { formatTRY } from '../lib/utils';
+import { Mask } from '../contexts/SensitiveContext';
 import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
+import Skeleton from '../components/Skeleton';
 import Modal from '../components/Modal';
 
 // Local bank logo files in /public/bank-logos/
@@ -178,10 +181,10 @@ export default function CreditCards() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-gray-300 dark:bg-slate-700 rounded-lg skeleton" />
+        <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-24 bg-gray-300 dark:bg-slate-700 rounded-2xl skeleton" />
+            <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -268,11 +271,11 @@ export default function CreditCards() {
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider">Borç</p>
-                  <p className="text-sm font-bold text-red-600 dark:text-red-400">{formatTRY(card.current_debt)}</p>
+                  <p className="text-sm font-bold text-red-600 dark:text-red-400"><Mask>{formatTRY(card.current_debt)}</Mask></p>
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider">Kalan</p>
-                  <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{formatTRY(available)}</p>
+                  <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400"><Mask>{formatTRY(available)}</Mask></p>
                 </div>
               </div>
 
@@ -296,12 +299,13 @@ export default function CreditCards() {
       </div>
 
       {cards?.length === 0 && (
-        <div className="text-center py-16 bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
-          <CreditCard size={48} className="mx-auto text-gray-300 dark:text-slate-600 mb-4" />
-          <p className="text-gray-500 dark:text-slate-400">Henüz kredi kartı eklemediniz</p>
-          <button onClick={() => setModalOpen(true)} className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium">
-            İlk Kartınızı Ekleyin
-          </button>
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
+          <EmptyState icon={CreditCard} title="Henüz kredi kartı yok" description="Kredi kartı ekleyerek limit ve borç takibi yap." />
+          <div className="pb-8 text-center">
+            <button onClick={() => setModalOpen(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
+              İlk Kartı Ekle
+            </button>
+          </div>
         </div>
       )}
 

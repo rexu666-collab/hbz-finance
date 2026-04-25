@@ -59,6 +59,9 @@ CREATE TABLE IF NOT EXISTS transactions (
   installment_count INTEGER DEFAULT 1,
   installment_number INTEGER DEFAULT 1,
   parent_transaction_id UUID REFERENCES transactions(id) ON DELETE CASCADE,
+  is_recurring BOOLEAN DEFAULT FALSE,
+  recurring_interval TEXT,
+  recurring_day INTEGER,
   transaction_date DATE NOT NULL DEFAULT CURRENT_DATE,
   created_at TIMESTAMPTZ DEFAULT now()
 );

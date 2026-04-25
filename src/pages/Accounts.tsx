@@ -3,7 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useExchangeRates } from '../hooks/useSupabase';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Pencil, Trash2, CreditCard, Landmark, Coins, CircleDollarSign } from 'lucide-react';
+import { Plus, Pencil, Trash2, Landmark, Coins, CircleDollarSign } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
+import Skeleton from '../components/Skeleton';
 import Modal from '../components/Modal';
 import type { CurrencyCode, AccountType } from '../types';
 
@@ -185,10 +187,10 @@ export default function Accounts() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-gray-300 dark:bg-slate-700 rounded-lg skeleton" />
+        <Skeleton className="h-8 w-48" />
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-40 bg-gray-300 dark:bg-slate-700 rounded-2xl skeleton" />
+            <Skeleton key={i} className="h-40 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -267,12 +269,13 @@ export default function Accounts() {
       </div>
 
       {accounts?.length === 0 && (
-        <div className="text-center py-16 bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
-          <CreditCard size={48} className="mx-auto text-gray-300 dark:text-slate-600 mb-4" />
-          <p className="text-gray-500 dark:text-slate-400">Henüz hesap eklemediniz</p>
-          <button onClick={() => setModalOpen(true)} className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium">
-            İlk Hesabınızı Ekleyin
-          </button>
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
+          <EmptyState icon={Landmark} title="Henüz hesap yok" description="Banka, döviz veya altın hesabı ekleyerek başla." />
+          <div className="pb-8 text-center">
+            <button onClick={() => setModalOpen(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
+              İlk Hesabını Ekle
+            </button>
+          </div>
         </div>
       )}
 

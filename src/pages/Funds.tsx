@@ -4,6 +4,8 @@ import { useToast } from '../contexts/ToastContext';
 import { useFunds, useUserFunds, useCreateUserFund, useUpdateUserFund, useDeleteUserFund } from '../hooks/useSupabase';
 import { formatTRY, formatPercent } from '../lib/utils';
 import { Plus, Search, RefreshCw, Trash2, TrendingUp } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
+import Skeleton from '../components/Skeleton';
 import Modal from '../components/Modal';
 
 export default function Funds() {
@@ -102,10 +104,10 @@ export default function Funds() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded-lg skeleton" />
+        <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl skeleton" />
+            <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
       </div>
@@ -164,12 +166,13 @@ export default function Funds() {
       {/* Funds List */}
       <div className="space-y-4">
         {userFunds?.length === 0 ? (
-          <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed text-center py-16">
-            <TrendingUp size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">Henüz fon eklemediniz</p>
-            <button onClick={() => setAddModalOpen(true)} className="mt-4 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium">
-              İlk Fonunuzu Ekleyin
-            </button>
+          <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
+            <EmptyState icon={TrendingUp} title="Henüz fon yok" description="TEFAS fonu ekleyerek portföyünü oluştur." />
+            <div className="pb-8 text-center">
+              <button onClick={() => setAddModalOpen(true)} className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
+                İlk Fonu Ekle
+              </button>
+            </div>
           </div>
         ) : (
           userFunds?.map((uf) => {

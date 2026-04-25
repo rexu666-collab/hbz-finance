@@ -2,6 +2,9 @@ import { useAccounts, useTransactions, useUserFunds, useExchangeRates, useCredit
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatTRY, formatCurrency } from '../lib/utils';
+import { Mask } from '../contexts/SensitiveContext';
+import Skeleton from '../components/Skeleton';
+import EmptyState from '../components/EmptyState';
 import { 
   TrendingUp, TrendingDown, 
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
@@ -124,12 +127,17 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 bg-gray-300 dark:bg-slate-700 rounded-lg skeleton" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-32 bg-gray-300 dark:bg-slate-700 rounded-2xl skeleton" />
+      <div className="space-y-6 p-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-48 w-full rounded-2xl" />
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map(i => (
+            <Skeleton key={i} className="h-32 rounded-2xl" />
           ))}
+        </div>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
         </div>
       </div>
     );
@@ -170,26 +178,26 @@ export default function Dashboard() {
               <TrendingUp size={20} className="text-white/50 hidden sm:block" />
             </div>
             <div className="text-3xl sm:text-5xl font-bold mb-4 sm:mb-6 tracking-tight break-all">
-              {formatTRY(netWorth)}
+              <Mask>{formatTRY(netWorth)}</Mask>
             </div>
               <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
                   <ArrowUpRight size={14} className="text-emerald-300 sm:hidden" />
                   <ArrowUpRight size={16} className="text-emerald-300 hidden sm:block" />
-                  <span className="text-white/80">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
+                  <span className="text-white/80">Varlık: <Mask>{formatTRY(totalAssets + fundTotal)}</Mask></span>
                 </div>
                 {fundTotal > 0 && (
                   <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
                     <ArrowDownRight size={14} className="text-purple-300 sm:hidden" />
                     <ArrowDownRight size={16} className="text-purple-300 hidden sm:block" />
-                    <span className="text-white/80">Fonlar: {formatTRY(fundTotal)}</span>
+                    <span className="text-white/80">Fonlar: <Mask>{formatTRY(fundTotal)}</Mask></span>
                   </div>
                 )}
                 {creditCardDebt > 0 && (
                   <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
                     <ArrowDownRight size={14} className="text-orange-300 sm:hidden" />
                     <ArrowDownRight size={16} className="text-orange-300 hidden sm:block" />
-                    <span className="text-white/80">K.K. Borç: {formatTRY(creditCardDebt)}</span>
+                    <span className="text-white/80">K.K. Borç: <Mask>{formatTRY(creditCardDebt)}</Mask></span>
                   </div>
                 )}
               </div>
@@ -275,7 +283,7 @@ export default function Dashboard() {
             <div key={item.label} className="flex-1 px-3 py-2.5 text-center">
               <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider block leading-tight">{item.label}</span>
               <span className={`text-sm font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                {isPositive ? '+' : ''}{formatTRY(item.value)}
+                <Mask>{isPositive ? '+' : ''}{formatTRY(item.value)}</Mask>
               </span>
             </div>
           );
@@ -339,18 +347,15 @@ export default function Dashboard() {
                       />
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 dark:text-slate-400">
-                      <span>Borç: {formatTRY(card.current_debt)}</span>
-                      <span>Kalan: {formatTRY(available)}</span>
+                      <span>Borç: <Mask>{formatTRY(card.current_debt)}</Mask></span>
+                      <span>Kalan: <Mask>{formatTRY(available)}</Mask></span>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="h-[200px] flex items-center justify-center text-gray-400 flex-col gap-3">
-              <CreditCard size={40} className="opacity-30" />
-              <p>Henüz kredi kartı eklenmemiş</p>
-            </div>
+            <EmptyState icon={CreditCard} title="Henüz kredi kartı yok" />
           )}
         </div>
 
@@ -432,10 +437,7 @@ export default function Dashboard() {
         </div>
         <div className="space-y-2">
           {recentTransactions.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 flex flex-col items-center gap-3">
-              <Gem size={40} className="opacity-30" />
-              <p>Henüz işlem yok</p>
-            </div>
+            <EmptyState icon={Gem} title="Henüz işlem yok" description="İlk işlemini eklemek için + butonuna tıkla." />
           ) : (
             recentTransactions.map((tx, index) => (
               <div 
@@ -495,7 +497,7 @@ function SummaryCards({ cards }: { cards: { icon: React.ReactNode; label: string
             </div>
             <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold truncate">{card.label}</p>
             <p className="text-base sm:text-xl font-bold text-gray-800 dark:text-white mt-0.5 sm:mt-1 truncate">
-              {formatTRY(card.value)}
+              <Mask>{formatTRY(card.value)}</Mask>
             </p>
           </div>
         </div>

@@ -3,7 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useTransactions, useAccounts, useCategories, useCreditCards, useCreateTransaction, useUpdateTransaction, useDeleteTransaction, useCreateCategory, useDeleteCategory } from '../hooks/useSupabase';
 import { formatCurrency, formatDate, formatTRY } from '../lib/utils';
-import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight, CreditCard, Wallet, Landmark } from 'lucide-react';
+import { Mask } from '../contexts/SensitiveContext';
+import Skeleton from '../components/Skeleton';
+import EmptyState from '../components/EmptyState';
+import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight, CreditCard, Wallet, Landmark, Repeat } from 'lucide-react';
 import Modal from '../components/Modal';
 import type { TransactionType, CurrencyCode, PaymentMethod } from '../types';
 
@@ -47,6 +50,8 @@ export default function Transactions() {
     payment_method: 'other' as PaymentMethod,
     credit_card_id: '',
     installment_count: 1,
+    is_recurring: false,
+    recurring_interval: 'monthly' as 'monthly' | 'weekly' | 'yearly',
     transaction_date: new Date().toISOString().split('T')[0],
   });
 
@@ -64,6 +69,9 @@ export default function Transactions() {
         credit_card_id: form.credit_card_id || null,
         installment_number: 1,
         parent_transaction_id: null,
+        is_recurring: form.is_recurring,
+        recurring_interval: form.is_recurring ? form.recurring_interval : null,
+        recurring_day: form.is_recurring ? parseInt(form.transaction_date.split('-')[2]) : null,
       };
       if (editingTx) {
         await updateTransaction.mutateAsync({ id: editingTx.id, ...payload });
@@ -84,6 +92,8 @@ export default function Transactions() {
         payment_method: 'other',
         credit_card_id: '',
         installment_count: 1,
+        is_recurring: false,
+        recurring_interval: 'monthly',
         transaction_date: new Date().toISOString().split('T')[0],
       });
     } catch (err: any) {
@@ -104,6 +114,8 @@ export default function Transactions() {
       payment_method: (tx.payment_method === 'eft' ? 'havale' : tx.payment_method) || 'other',
       credit_card_id: tx.credit_card_id || '',
       installment_count: tx.installment_count || 1,
+      is_recurring: tx.is_recurring || false,
+      recurring_interval: tx.recurring_interval || 'monthly',
       transaction_date: tx.transaction_date,
     });
     setModalOpen(true);
@@ -190,10 +202,10 @@ export default function Transactions() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 bg-gray-300 dark:bg-slate-700 rounded-lg skeleton" />
+        <Skeleton className="h-8 w-48" />
         <div className="space-y-2">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-16 bg-gray-300 dark:bg-slate-700 rounded-xl skeleton" />
+            <Skeleton key={i} className="h-16 rounded-xl" />
           ))}
         </div>
       </div>
@@ -231,16 +243,16 @@ export default function Transactions() {
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-800">
           <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Gelir</p>
-          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">+{formatTRY(monthIncome)}</p>
+          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">+<Mask>{formatTRY(monthIncome)}</Mask></p>
         </div>
         <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 border border-red-200 dark:border-red-800">
           <p className="text-xs text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">Gider</p>
-          <p className="text-xl font-bold text-red-700 dark:text-red-300">-{formatTRY(monthExpense)}</p>
+          <p className="text-xl font-bold text-red-700 dark:text-red-300">-<Mask>{formatTRY(monthExpense)}</Mask></p>
         </div>
         <div className={`${monthNet >= 0 ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800'} rounded-2xl p-4 border`}>
           <p className={`text-xs uppercase tracking-wider mb-1 ${monthNet >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>Net</p>
           <p className={`text-xl font-bold ${monthNet >= 0 ? 'text-blue-700 dark:text-blue-300' : 'text-orange-700 dark:text-orange-300'}`}>
-            {monthNet >= 0 ? '+' : ''}{formatTRY(monthNet)}
+            <Mask>{monthNet >= 0 ? '+' : ''}{formatTRY(monthNet)}</Mask>
           </p>
         </div>
       </div>
@@ -266,10 +278,7 @@ export default function Transactions() {
       <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="divide-y divide-gray-100 dark:divide-slate-700">
           {filteredTransactions?.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <Filter size={32} className="mx-auto mb-2 opacity-50" />
-              <p>Henüz işlem yok</p>
-            </div>
+            <EmptyState icon={Filter} title="Henüz işlem yok" description="Bu ay için kaydedilmiş işlem bulunmuyor." />
           ) : (
             filteredTransactions?.map((tx) => (
               <div
@@ -291,6 +300,9 @@ export default function Transactions() {
                         <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
                           {tx.installment_number}/{tx.installment_count}
                         </span>
+                      )}
+                      {tx.is_recurring && (
+                        <Repeat size={12} className="inline ml-1 text-purple-500 dark:text-purple-400" />
                       )}
                     </p>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 mt-0.5 truncate">
@@ -504,6 +516,31 @@ export default function Transactions() {
               required
             />
           </div>
+
+          {form.type !== 'transfer' && (
+            <div className="flex items-center justify-between px-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.is_recurring}
+                  onChange={(e) => setForm({ ...form, is_recurring: e.target.checked })}
+                  className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-500 focus:ring-indigo-500"
+                />
+                <span className="text-[11px] text-gray-600 dark:text-slate-300">Tekrarlayan işlem</span>
+              </label>
+              {form.is_recurring && (
+                <select
+                  value={form.recurring_interval}
+                  onChange={(e) => setForm({ ...form, recurring_interval: e.target.value as 'monthly' | 'weekly' | 'yearly' })}
+                  className="px-2 py-0.5 rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-[11px] text-gray-700 dark:text-slate-300 outline-none"
+                >
+                  <option value="monthly">Her ay</option>
+                  <option value="weekly">Her hafta</option>
+                  <option value="yearly">Her yıl</option>
+                </select>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-2 pt-0.5">
             <button type="button" onClick={() => { setModalOpen(false); setEditingTx(null); }} className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-700 text-xs text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
