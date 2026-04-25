@@ -5,10 +5,10 @@ export interface Profile {
   created_at: string;
 }
 
-export type AccountType = 'bank';
+export type AccountType = 'bank' | 'doviz' | 'altin';
 export type TransactionType = 'income' | 'expense' | 'transfer';
 export type PaymentMethod = 'havale' | 'eft' | 'credit_card' | 'cash' | 'other';
-export type CurrencyCode = 'TRY' | 'USD' | 'EUR' | 'GBP' | 'CHF' | 'JPY' | 'XAU' | 'XAG' | 'CUM' | 'YAR' | 'TAM';
+export type CurrencyCode = 'TRY' | 'USD' | 'EUR' | 'GBP' | 'CHF' | 'JPY' | 'XAU' | 'XAG' | 'CUM' | 'YAR' | 'TAM' | 'ATA' | 'CUMH' | 'BILEZIK';
 
 export interface Account {
   id: string;
@@ -108,6 +108,9 @@ export const CURRENCY_SYMBOLS: Record<string, string> = {
   CUM: 'adet',
   YAR: 'adet',
   TAM: 'adet',
+  ATA: 'adet',
+  CUMH: 'adet',
+  BILEZIK: 'gr',
 };
 
 export const CURRENCY_LABELS: Record<string, string> = {
@@ -122,10 +125,15 @@ export const CURRENCY_LABELS: Record<string, string> = {
   CUM: 'Çeyrek Altın',
   YAR: 'Yarım Altın',
   TAM: 'Tam Altın',
+  ATA: 'Ata Altın',
+  CUMH: 'Cumhuriyet Altını',
+  BILEZIK: '22 Ayar Bilezik',
 };
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   bank: 'Banka Hesabı',
+  doviz: 'Döviz Hesabı',
+  altin: 'Altın Hesabı',
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

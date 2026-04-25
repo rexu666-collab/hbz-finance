@@ -135,27 +135,50 @@ export function useCategories() {
   });
 }
 
+// Truncgil API mapping
+const TRUNCGIL_MAP: Record<string, { code: string; rate_type: 'doviz' | 'altin' }> = {
+  'USD': { code: 'USD', rate_type: 'doviz' },
+  'EUR': { code: 'EUR', rate_type: 'doviz' },
+  'GBP': { code: 'GBP', rate_type: 'doviz' },
+  'CHF': { code: 'CHF', rate_type: 'doviz' },
+  'JPY': { code: 'JPY', rate_type: 'doviz' },
+  'gram-altin': { code: 'XAU', rate_type: 'altin' },
+  'gumus': { code: 'XAG', rate_type: 'altin' },
+  'ceyrek-altin': { code: 'CUM', rate_type: 'altin' },
+  'yarim-altin': { code: 'YAR', rate_type: 'altin' },
+  'tam-altin': { code: 'TAM', rate_type: 'altin' },
+  'cumhuriyet-altini': { code: 'CUMH', rate_type: 'altin' },
+  'ata-altin': { code: 'ATA', rate_type: 'altin' },
+  '22-ayar-bilezik': { code: 'BILEZIK', rate_type: 'altin' },
+};
+
+function parseTruncgilValue(val: string): number {
+  // Truncgil values use comma as decimal separator and dot as thousands separator
+  // e.g. "6.815,04" or "45,0379"
+  return parseFloat(val.replace(/\./g, '').replace(',', '.'));
+}
+
 export function useExchangeRates() {
   return useQuery({
     queryKey: ['exchange_rates'],
     queryFn: async () => {
-      // Fetch live doviz rates from free API (TRY base -> inverse to get rate_to_try)
-      const res = await fetch('https://open.er-api.com/v6/latest/TRY');
+      const res = await fetch('https://finans.truncgil.com/v3/today.json');
       const json = await res.json();
-      if (json.result !== 'success') throw new Error('Exchange rate API failed');
 
       const apiRates: ExchangeRate[] = [];
-      const dovizCodes = ['USD', 'EUR', 'GBP', 'CHF', 'JPY'];
 
-      for (const code of dovizCodes) {
-        const val = json.rates?.[code];
-        if (typeof val === 'number') {
-          apiRates.push({
-            currency_code: code as any,
-            rate_to_try: 1 / val,
-            rate_type: 'doviz',
-            updated_at: new Date().toISOString(),
-          });
+      for (const [key, meta] of Object.entries(TRUNCGIL_MAP)) {
+        const item = json[key];
+        if (item && item.Selling) {
+          const rate = parseTruncgilValue(item.Selling);
+          if (!isNaN(rate) && rate > 0) {
+            apiRates.push({
+              currency_code: meta.code as any,
+              rate_to_try: rate,
+              rate_type: meta.rate_type,
+              updated_at: new Date().toISOString(),
+            });
+          }
         }
       }
 
@@ -167,13 +190,9 @@ export function useExchangeRates() {
         updated_at: new Date().toISOString(),
       });
 
-      // Fallback: fetch altin rates from Supabase (not available in free API)
-      const { data: sbRates, error } = await supabase
-        .from('exchange_rates')
-        .select('*')
-        .in('currency_code', ['XAU', 'XAG', 'CUM', 'YAR', 'TAM']);
-      if (!error && sbRates) {
-        apiRates.push(...(sbRates as ExchangeRate[]));
+      // Persist to Supabase
+      for (const rate of apiRates) {
+        await supabase.from('exchange_rates').upsert(rate as any, { onConflict: 'currency_code' });
       }
 
       return apiRates;
@@ -186,18 +205,24 @@ export function useUpdateExchangeRates() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const res = await fetch('https://open.er-api.com/v6/latest/TRY');
+      const res = await fetch('https://finans.truncgil.com/v3/today.json');
       const json = await res.json();
-      if (json.result !== 'success') throw new Error('Exchange rate API failed');
 
-      const rates: Partial<ExchangeRate>[] = [
-        { currency_code: 'USD', rate_to_try: 1 / json.rates.USD, rate_type: 'doviz' },
-        { currency_code: 'EUR', rate_to_try: 1 / json.rates.EUR, rate_type: 'doviz' },
-        { currency_code: 'GBP', rate_to_try: 1 / json.rates.GBP, rate_type: 'doviz' },
-        { currency_code: 'CHF', rate_to_try: 1 / json.rates.CHF, rate_type: 'doviz' },
-        { currency_code: 'JPY', rate_to_try: 1 / json.rates.JPY, rate_type: 'doviz' },
-        { currency_code: 'TRY', rate_to_try: 1, rate_type: 'doviz' },
-      ];
+      const rates: Partial<ExchangeRate>[] = [];
+      for (const [key, meta] of Object.entries(TRUNCGIL_MAP)) {
+        const item = json[key];
+        if (item && item.Selling) {
+          const rate = parseTruncgilValue(item.Selling);
+          if (!isNaN(rate) && rate > 0) {
+            rates.push({
+              currency_code: meta.code as any,
+              rate_to_try: rate,
+              rate_type: meta.rate_type,
+            });
+          }
+        }
+      }
+      rates.push({ currency_code: 'TRY', rate_to_try: 1, rate_type: 'doviz' });
 
       for (const rate of rates) {
         await supabase.from('exchange_rates').upsert(rate as any, { onConflict: 'currency_code' });

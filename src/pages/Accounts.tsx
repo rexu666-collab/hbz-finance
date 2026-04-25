@@ -3,11 +3,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useExchangeRates } from '../hooks/useSupabase';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
+import { Plus, Pencil, Trash2, CreditCard, Landmark, Coins, CircleDollarSign } from 'lucide-react';
 import Modal from '../components/Modal';
-import type { CurrencyCode } from '../types';
+import type { CurrencyCode, AccountType } from '../types';
 
-const CURRENCIES: CurrencyCode[] = ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY', 'XAU', 'XAG', 'CUM', 'YAR', 'TAM'];
+const DOVIZ_CODES: CurrencyCode[] = ['USD', 'EUR', 'GBP', 'CHF', 'JPY'];
+const ALTIN_CODES: CurrencyCode[] = ['XAU', 'XAG', 'CUM', 'YAR', 'TAM', 'ATA', 'CUMH', 'BILEZIK'];
+const BANK_CODES: CurrencyCode[] = ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY'];
+
+const TYPE_CONFIG: Record<AccountType, { label: string; icon: React.ReactNode; color: string; currencies: CurrencyCode[] }> = {
+  bank: { label: 'Banka Hesabı', icon: <Landmark size={18} />, color: '#2563eb', currencies: BANK_CODES },
+  doviz: { label: 'Döviz Hesabı', icon: <CircleDollarSign size={18} />, color: '#10b981', currencies: DOVIZ_CODES },
+  altin: { label: 'Altın Hesabı', icon: <Coins size={18} />, color: '#f59e0b', currencies: ALTIN_CODES },
+};
 
 // Bank logo helpers (shared logic with CreditCards)
 const LOCAL_BANK_LOGOS: Record<string, string> = {
@@ -100,7 +108,7 @@ export default function Accounts() {
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [form, setForm] = useState({
     name: '',
-    type: 'bank' as const,
+    type: 'bank' as AccountType,
     currency: 'TRY' as CurrencyCode,
     balance: 0,
     color: '#2563eb',
@@ -111,6 +119,8 @@ export default function Accounts() {
     if (currency === 'TRY') return 1;
     return exchangeRates?.find((r) => r.currency_code === currency)?.rate_to_try || 1;
   };
+
+  const getTypeConfig = (type: AccountType) => TYPE_CONFIG[type];
 
   const resetForm = () => {
     setForm({ name: '', type: 'bank', currency: 'TRY', balance: 0, color: '#2563eb', icon: 'landmark' });
@@ -124,7 +134,7 @@ export default function Accounts() {
       return;
     }
     try {
-      const autoColor = getBankColor(form.name);
+      const autoColor = form.type === 'bank' ? getBankColor(form.name) : getTypeConfig(form.type).color;
       const data = { 
         ...form, 
         user_id: user.id,
@@ -152,7 +162,7 @@ export default function Accounts() {
     setEditingAccount(account);
     setForm({
       name: account.name,
-      type: 'bank',
+      type: account.type || 'bank',
       currency: account.currency,
       balance: Math.abs(account.balance),
       color: account.color || '#2563eb',
@@ -189,8 +199,8 @@ export default function Accounts() {
     <div className="space-y-6 fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Banka Hesaplarım</h1>
-          <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">Tüm banka hesaplarınızı yönetin</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Hesaplarım</h1>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">Banka, döviz ve altın hesaplarınızı yönetin</p>
         </div>
         <button
           onClick={() => { resetForm(); setModalOpen(true); }}
@@ -204,15 +214,25 @@ export default function Accounts() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {accounts?.map((account) => {
           const tryValue = account.balance * getRate(account.currency);
+          const config = getTypeConfig(account.type || 'bank');
 
           return (
             <div key={account.id} className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm card-hover group">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <BankLogo bankName={account.name} />
+                  {account.type === 'bank' ? (
+                    <BankLogo bankName={account.name} />
+                  ) : (
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white shadow-lg shrink-0"
+                      style={{ backgroundColor: account.color || config.color }}
+                    >
+                      {config.icon}
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-semibold text-gray-800 dark:text-white">{account.name}</h3>
-                    <p className="text-xs text-gray-500 dark:text-slate-400">Banka Hesabı</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">{config.label}</p>
                   </div>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -259,9 +279,34 @@ export default function Accounts() {
       <Modal
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); resetForm(); }}
-        title={editingAccount ? 'Hesap Düzenle' : 'Yeni Banka Hesabı'}
+        title={editingAccount ? 'Hesap Düzenle' : 'Yeni Hesap'}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Account Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Hesap Tipi</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['bank', 'doviz', 'altin'] as AccountType[]).map((t) => {
+                const cfg = TYPE_CONFIG[t];
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setForm({ ...form, type: t, currency: cfg.currencies[0] })}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-xl border text-xs font-medium transition-all ${
+                      form.type === t
+                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                        : 'border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {cfg.icon}
+                    <span>{cfg.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Hesap Adı</label>
             <input
@@ -269,26 +314,26 @@ export default function Accounts() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-              placeholder="Örn: Ziraat Bankası"
+              placeholder={form.type === 'bank' ? 'Örn: Ziraat Bankası' : form.type === 'doviz' ? 'Örn: Döviz Birikimim' : 'Örn: Altın Hesabım'}
               required
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Para Birimi</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Birim</label>
               <select
                 value={form.currency}
                 onChange={(e) => setForm({ ...form, currency: e.target.value as CurrencyCode })}
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               >
-                {CURRENCIES.map((c) => (
+                {getTypeConfig(form.type).currencies.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Bakiye</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Miktar</label>
               <input
                 type="number"
                 step="0.01"
