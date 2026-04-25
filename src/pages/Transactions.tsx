@@ -28,7 +28,7 @@ export default function Transactions() {
   const createCategory = useCreateCategory();
   const deleteCategory = useDeleteCategory();
 
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -409,67 +409,22 @@ export default function Transactions() {
               <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Kategori</label>
               <button
                 type="button"
-                onClick={() => setShowCategoryManager(!showCategoryManager)}
+                onClick={() => setCategoryModalOpen(true)}
                 className="text-xs text-indigo-500 hover:text-indigo-600 font-medium"
               >
-                {showCategoryManager ? 'Kapat' : 'Yönet'}
+                Yönet
               </button>
             </div>
-
-            {showCategoryManager ? (
-              <div className="space-y-3 p-3 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
-                {/* Add new category */}
-                <form onSubmit={handleAddCategory} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="Yeni kategori adı"
-                    className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!newCategoryName.trim()}
-                    className="px-3 py-2 rounded-lg bg-indigo-500 text-white text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 transition-colors"
-                  >
-                    Ekle
-                  </button>
-                </form>
-
-                {/* Existing categories list */}
-                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                  {categories?.filter(c => c.type === form.type && !c.is_default).map((cat) => (
-                    <div
-                      key={cat.id}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-200 dark:bg-slate-700 text-xs text-gray-700 dark:text-slate-300"
-                    >
-                      <span>{cat.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                        className="text-red-400 hover:text-red-500"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  {categories?.filter(c => c.type === form.type && !c.is_default).length === 0 && (
-                    <span className="text-xs text-gray-400 italic">Henüz özel kategori yok</span>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <select
-                value={form.category_id}
-                onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-              >
-                <option value="">Kategori seçin (isteğe bağlı)</option>
-                {categories?.filter(c => c.type === form.type).map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            )}
+            <select
+              value={form.category_id}
+              onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            >
+              <option value="">Kategori seçin (isteğe bağlı)</option>
+              {categories?.filter(c => c.type === form.type).map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -529,6 +484,58 @@ export default function Transactions() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Category Manager Modal */}
+      <Modal
+        isOpen={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+        title="Kategorileri Yönet"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <form onSubmit={handleAddCategory} className="flex gap-2">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="Yeni kategori adı"
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500"
+            />
+            <button
+              type="submit"
+              disabled={!newCategoryName.trim()}
+              className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 transition-colors"
+            >
+              Ekle
+            </button>
+          </form>
+
+          <div className="space-y-1.5 max-h-60 overflow-y-auto">
+            <p className="text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+              {form.type === 'income' ? 'Gelir' : 'Gider'} Kategorileri
+            </p>
+            {categories?.filter(c => c.type === form.type && !c.is_default).length === 0 ? (
+              <p className="text-sm text-gray-400 italic">Henüz özel kategori yok</p>
+            ) : (
+              categories?.filter(c => c.type === form.type && !c.is_default).map((cat) => (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-200/50 dark:bg-slate-700/50"
+                >
+                  <span className="text-sm text-gray-800 dark:text-white">{cat.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                    className="p-1 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 text-red-400 hover:text-red-500 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </Modal>
     </div>
   );
