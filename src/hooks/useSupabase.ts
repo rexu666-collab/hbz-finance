@@ -135,12 +135,16 @@ export function useCategories() {
     queryFn: async () => {
       const { data, error } = await supabase.from('categories').select('*').order('name');
       if (error) throw error;
-      const seen = new Set<string>();
-      return (data as Category[]).filter((cat) => {
-        if (seen.has(cat.name)) return false;
-        seen.add(cat.name);
-        return true;
+      // Deduplicate by name+type; prefer user categories over defaults
+      const unique = new Map<string, Category>();
+      (data as Category[]).forEach((cat) => {
+        const key = `${cat.type}-${cat.name}`;
+        const existing = unique.get(key);
+        if (!existing || (!existing.user_id && cat.user_id)) {
+          unique.set(key, cat);
+        }
       });
+      return Array.from(unique.values());
     },
   });
 }
