@@ -23,6 +23,8 @@ const LOCAL_BANK_LOGOS: Record<string, string> = {
   turkekonomibankasi: '/bank-logos/teb.svg',
   ing: '/bank-logos/ing.svg',
   ingbank: '/bank-logos/ing.svg',
+  enpara: '/bank-logos/enpara.png',
+  enparacom: '/bank-logos/enpara.png',
 };
 
 function getBankLogoPath(name: string): string | null {
@@ -62,7 +64,7 @@ function BankLogo({ bankName }: { bankName: string }) {
       <img
         src={path}
         alt={bankName}
-        className="w-11 h-11 object-contain rounded-xl bg-white dark:bg-white p-1 shadow-lg shrink-0"
+        className="w-12 h-12 object-contain rounded-lg bg-white dark:bg-white p-0.5 shadow-lg shrink-0"
         onError={() => setError(true)}
         loading="lazy"
       />
@@ -73,11 +75,11 @@ function BankLogo({ bankName }: { bankName: string }) {
   const initial = bankName.charAt(0).toUpperCase();
   return (
     <div
-      className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shrink-0"
+      className="w-12 h-12 rounded-lg flex items-center justify-center shadow-lg shrink-0"
       style={{ backgroundColor: color, color: '#fff' }}
       title={bankName}
     >
-      <span className="text-base font-bold">{initial}</span>
+      <span className="text-lg font-bold">{initial}</span>
     </div>
   );
 }
