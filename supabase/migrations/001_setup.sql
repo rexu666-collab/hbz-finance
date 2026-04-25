@@ -168,6 +168,22 @@ INSERT INTO exchange_rates (currency_code, rate_to_try, rate_type) VALUES
   ('BILEZIK', 2100, 'altin')
 ON CONFLICT (currency_code) DO NOTHING;
 
+-- Ensure exchange_rates admin policies exist (safe for pre-PG15)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'exchange_rates' AND policyname = 'exchange_rates_insert'
+  ) THEN
+    CREATE POLICY "exchange_rates_insert" ON exchange_rates FOR INSERT TO authenticated WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'exchange_rates' AND policyname = 'exchange_rates_update'
+  ) THEN
+    CREATE POLICY "exchange_rates_update" ON exchange_rates FOR UPDATE TO authenticated USING (true);
+  END IF;
+EXCEPTION WHEN others THEN NULL;
+END $$;
+
 -- Credit Cards Table
 CREATE TABLE IF NOT EXISTS credit_cards (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
