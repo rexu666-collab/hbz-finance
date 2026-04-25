@@ -212,7 +212,7 @@ export default function Dashboard() {
 
       {/* Net Worth Card - Hero with Pie Chart */}
       <div 
-        className="relative overflow-hidden rounded-3xl animated-gradient p-8 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-2xl sm:rounded-3xl animated-gradient p-5 sm:p-8 text-white shadow-2xl"
         style={{ boxShadow: '0 25px 80px -20px rgba(99, 102, 241, 0.4)' }}
       >
         {/* Animated background orbs */}
@@ -223,27 +223,31 @@ export default function Dashboard() {
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-white/70 text-sm font-medium tracking-wide uppercase">Net Varlık</span>
-              <TrendingUp size={20} className="text-white/50" />
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <span className="text-white/70 text-xs sm:text-sm font-medium tracking-wide uppercase">Net Varlık</span>
+              <TrendingUp size={16} className="text-white/50 sm:hidden" />
+              <TrendingUp size={20} className="text-white/50 hidden sm:block" />
             </div>
-            <div className="text-5xl font-bold mb-6 tracking-tight">
+            <div className="text-3xl sm:text-5xl font-bold mb-4 sm:mb-6 tracking-tight break-all">
               {formatTRY(netWorth)}
             </div>
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
-                  <ArrowUpRight size={16} className="text-emerald-300" />
+              <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
+                  <ArrowUpRight size={14} className="text-emerald-300 sm:hidden" />
+                  <ArrowUpRight size={16} className="text-emerald-300 hidden sm:block" />
                   <span className="text-white/80">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
                 </div>
                 {fundTotal > 0 && (
-                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
-                    <ArrowDownRight size={16} className="text-purple-300" />
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
+                    <ArrowDownRight size={14} className="text-purple-300 sm:hidden" />
+                    <ArrowDownRight size={16} className="text-purple-300 hidden sm:block" />
                     <span className="text-white/80">Fonlar: {formatTRY(fundTotal)}</span>
                   </div>
                 )}
                 {creditCardDebt > 0 && (
-                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
-                    <ArrowDownRight size={16} className="text-orange-300" />
+                  <div className="flex items-center gap-1.5 sm:gap-2 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
+                    <ArrowDownRight size={14} className="text-orange-300 sm:hidden" />
+                    <ArrowDownRight size={16} className="text-orange-300 hidden sm:block" />
                     <span className="text-white/80">K.K. Borç: {formatTRY(creditCardDebt)}</span>
                   </div>
                 )}
@@ -319,8 +323,9 @@ export default function Dashboard() {
             <Activity size={18} className="text-indigo-500" />
             Net Varlık Trendi
           </h3>
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={netWorthHistory}>
+          <div className="h-[200px] sm:h-[260px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={netWorthHistory}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
@@ -356,7 +361,8 @@ export default function Dashboard() {
                 fill="url(#colorValue)" 
               />
             </AreaChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Category Spending */}
@@ -367,8 +373,9 @@ export default function Dashboard() {
             Kategori Harcamaları
           </h3>
           {categoryPieData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={categoryPieData} layout="vertical" margin={{ left: 20 }}>
+            <div className="h-[200px] sm:h-[240px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryPieData} layout="vertical" margin={{ left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" opacity={0.5} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
                 <YAxis dataKey="name" type="category" width={70} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
@@ -389,10 +396,11 @@ export default function Dashboard() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
-            <div className="h-[240px] flex items-center justify-center text-gray-400 flex-col gap-3">
+            <div className="h-[200px] sm:h-[240px] flex items-center justify-center text-gray-400 flex-col gap-3">
               <Gem size={40} className="opacity-30" />
               <p>Henüz gider kaydı yok</p>
             </div>
@@ -458,23 +466,23 @@ export default function Dashboard() {
 function SummaryCards({ cards }: { cards: { icon: React.ReactNode; label: string; value: number; gradient: string; color: string; route: string }[] }) {
   const navigate = useNavigate();
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       {cards.map((card) => (
         <div
           key={card.label}
           onClick={() => navigate(card.route)}
-          className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer card-hover"
+          className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-3 sm:p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer card-hover"
         >
           <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             style={{ background: `radial-gradient(circle at 50% 0%, ${card.color}20, transparent 70%)` }}
           />
           <div className="relative z-10">
-            <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${card.gradient} text-white mb-4 shadow-lg`}>
+            <div className={`inline-flex p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br ${card.gradient} text-white mb-2 sm:mb-4 shadow-lg`}>
               {card.icon}
             </div>
-            <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold">{card.label}</p>
-            <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">
+            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold truncate">{card.label}</p>
+            <p className="text-base sm:text-xl font-bold text-gray-800 dark:text-white mt-0.5 sm:mt-1 truncate">
               {formatTRY(card.value)}
             </p>
           </div>

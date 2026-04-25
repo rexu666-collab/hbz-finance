@@ -137,11 +137,6 @@ export default function Transactions() {
     }
   };
 
-  const getPaymentMethodLabel = (method: PaymentMethod) => {
-    const found = PAYMENT_METHODS.find(m => m.value === method);
-    return found?.label || method;
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -229,46 +224,34 @@ export default function Transactions() {
             filteredTransactions?.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between p-4 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors group"
+                className="flex items-center justify-between p-3 sm:p-4 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors group gap-2 min-w-0"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className={`p-2 rounded-xl shrink-0 ${
                     tx.type === 'income' ? 'bg-emerald-100 dark:bg-emerald-900/20' : 
                     tx.type === 'expense' ? 'bg-red-100 dark:bg-red-900/20' : 
                     'bg-indigo-100 dark:bg-indigo-900/20'
                   }`}>
                     {getTypeIcon(tx.type)}
                   </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-800 dark:text-white">{tx.description || tx.accounts?.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400 mt-0.5">
-                      <span>{tx.accounts?.name}</span>
-                      <span>•</span>
-                      <span>{formatDate(tx.transaction_date)}</span>
-                      {tx.categories?.name && (
-                        <>
-                          <span>•</span>
-                          <span>{tx.categories.name}</span>
-                        </>
-                      )}
-                      {tx.payment_method && (
-                        <>
-                          <span>•</span>
-                          <span className="text-indigo-500 font-medium">{getPaymentMethodLabel(tx.payment_method)}</span>
-                        </>
-                      )}
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{tx.description || tx.accounts?.name}</p>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 mt-0.5 truncate">
+                      <span className="truncate">{tx.accounts?.name}</span>
+                      <span className="shrink-0">•</span>
+                      <span className="shrink-0">{formatDate(tx.transaction_date)}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`font-semibold text-sm ${
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  <span className={`font-semibold text-sm whitespace-nowrap ${
                     tx.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 
                     tx.type === 'expense' ? 'text-red-600 dark:text-red-400' : 'text-indigo-600 dark:text-indigo-400'
                   }`}>
                     {tx.type === 'income' ? '+' : tx.type === 'expense' ? '-' : ''}
                     {formatCurrency(tx.amount, tx.currency)}
                   </span>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="hidden sm:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleEdit(tx)}
                       className="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-indigo-400 transition-colors"
@@ -303,7 +286,7 @@ export default function Transactions() {
                   key={type}
                   type="button"
                   onClick={() => setForm({ ...form, type })}
-                  className={`p-3 rounded-xl border text-sm font-medium transition-all ${
+                  className={`p-2 sm:p-3 rounded-xl border text-xs sm:text-sm font-medium transition-all ${
                     form.type === type
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                       : 'border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'
@@ -332,13 +315,13 @@ export default function Transactions() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Ödeme Yöntemi</label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {PAYMENT_METHODS.map((method) => (
                 <button
                   key={method.value}
                   type="button"
                   onClick={() => setForm({ ...form, payment_method: method.value })}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-medium transition-all ${
+                  className={`flex items-center justify-center gap-2 p-2 sm:p-2.5 rounded-xl border text-xs font-medium transition-all ${
                     form.payment_method === method.value
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                       : 'border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'

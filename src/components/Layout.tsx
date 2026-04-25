@@ -10,29 +10,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-200 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-200 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden">
       {/* Top Bar - Mobile */}
-      <div className="lg:hidden flex items-center justify-between p-4 bg-gray-200/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-gray-300 dark:border-slate-800 sticky top-0 z-40">
-        <h1 className="text-xl font-bold gradient-text">HBZ Finance</h1>
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-gray-200/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-gray-300 dark:border-slate-800 sticky top-0 z-40">
+        <h1 className="text-lg font-bold gradient-text">HBZ Finance</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-400"
+            className="p-2 rounded-lg bg-gray-300 dark:bg-slate-800 text-gray-600 dark:text-slate-400"
           >
             {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-400"
+            className="p-2 rounded-lg bg-gray-300 dark:bg-slate-800 text-gray-600 dark:text-slate-400"
           >
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex min-w-0">
         {/* Sidebar - Desktop */}
-        <div className="hidden lg:flex w-64 h-screen sticky top-0 flex-col bg-gray-100 dark:bg-slate-900 border-r border-gray-300 dark:border-slate-800">
+        <div className="hidden lg:flex w-64 h-screen sticky top-0 flex-col bg-gray-100 dark:bg-slate-900 border-r border-gray-300 dark:border-slate-800 shrink-0">
           <div className="p-6 border-b border-gray-200 dark:border-slate-800">
             <h1 className="text-2xl font-bold gradient-text">HBZ Finance</h1>
             <p className="text-xs text-gray-500 mt-1">Kişisel Finans Yönetimi</p>
@@ -93,15 +93,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 min-h-screen">
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 lg:pb-8">
+        <div className="flex-1 min-h-screen min-w-0">
+          <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 pb-24 lg:pb-8">
             {children}
           </main>
         </div>
       </div>
 
       {/* Bottom Navigation - Mobile */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-200/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-gray-300 dark:border-slate-800 z-40 safe-area-pb">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-gray-200/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-gray-300 dark:border-slate-800 z-40">
         <Navigation isBottom />
       </div>
     </div>

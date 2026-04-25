@@ -2,33 +2,33 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Wallet, Receipt, PieChart, CreditCard, Settings } from 'lucide-react';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/accounts', label: 'Hesaplarım', icon: Wallet },
-  { path: '/transactions', label: 'İşlemler', icon: Receipt },
-  { path: '/funds', label: 'Fonlar', icon: PieChart },
-  { path: '/credit-cards', label: 'Kartlarım', icon: CreditCard },
-  { path: '/settings', label: 'Ayarlar', icon: Settings },
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard, short: 'Ana' },
+  { path: '/accounts', label: 'Hesaplarım', icon: Wallet, short: 'Hesap' },
+  { path: '/transactions', label: 'İşlemler', icon: Receipt, short: 'İşlem' },
+  { path: '/funds', label: 'Fonlar', icon: PieChart, short: 'Fon' },
+  { path: '/credit-cards', label: 'Kartlarım', icon: CreditCard, short: 'Kart' },
+  { path: '/settings', label: 'Ayarlar', icon: Settings, short: 'Ayar' },
 ];
 
 export default function Navigation({ isBottom = false, onNavigate }: { isBottom?: boolean; onNavigate?: () => void }) {
   if (isBottom) {
     return (
-      <nav className="flex justify-around py-2 px-1">
+      <nav className="flex justify-around items-center h-16">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 p-2 rounded-xl transition-all duration-200 ${
+              `flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 h-full transition-all duration-200 ${
                 isActive
                   ? 'text-indigo-600 dark:text-indigo-400'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  : 'text-slate-500 dark:text-slate-400'
               }`
             }
           >
-            <item.icon size={20} strokeWidth={2} />
-            <span className="text-[10px] font-medium">{item.label}</span>
+            <item.icon size={22} strokeWidth={2} />
+            <span className="text-[10px] font-medium truncate px-1">{item.short}</span>
           </NavLink>
         ))}
       </nav>
