@@ -67,7 +67,7 @@ function BankLogo({ bankName }: { bankName: string }) {
       <img
         src={path}
         alt={bankName}
-        className="w-12 h-12 object-contain rounded-lg bg-white dark:bg-white p-0.5 shadow-lg shrink-0"
+        className="w-12 h-12 object-contain rounded-lg bg-gray-50 dark:bg-gray-50 shadow-lg shrink-0"
         onError={() => setError(true)}
         loading="lazy"
       />
