@@ -235,3 +235,21 @@ END $$;
 
 -- 4. Add credit_card_id column to transactions if missing
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS credit_card_id UUID REFERENCES credit_cards(id) ON DELETE SET NULL;
+
+-- Notes Table
+CREATE TABLE IF NOT EXISTS notes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL DEFAULT '',
+  color TEXT DEFAULT '#6366f1',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+alter table if exists notes enable row level security;
+
+-- Notes RLS
+CREATE POLICY "notes_select" ON notes FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "notes_insert" ON notes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "notes_update" ON notes FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "notes_delete" ON notes FOR DELETE USING (auth.uid() = user_id);

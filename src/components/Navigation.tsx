@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Wallet, Receipt, PieChart, CreditCard, Settings } from 'lucide-react';
+import { LayoutDashboard, Wallet, Receipt, PieChart, CreditCard, Settings, StickyNote } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, short: 'Ana' },
@@ -7,6 +7,7 @@ const navItems = [
   { path: '/transactions', label: 'İşlemler', icon: Receipt, short: 'İşlem' },
   { path: '/funds', label: 'Fonlar', icon: PieChart, short: 'Fon' },
   { path: '/credit-cards', label: 'Kartlarım', icon: CreditCard, short: 'Kart' },
+  { path: '/notes', label: 'Notlarım', icon: StickyNote, short: 'Not' },
   { path: '/settings', label: 'Ayarlar', icon: Settings, short: 'Ayar' },
 ];
 

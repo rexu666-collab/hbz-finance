@@ -8,6 +8,7 @@ import Transactions from './pages/Transactions';
 import Funds from './pages/Funds';
 import CreditCards from './pages/CreditCards';
 import Settings from './pages/Settings';
+import Notes from './pages/Notes';
 
 function App() {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ function App() {
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/funds" element={<Funds />} />
         <Route path="/credit-cards" element={<CreditCards />} />
+        <Route path="/notes" element={<Notes />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

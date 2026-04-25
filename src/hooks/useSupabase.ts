@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { Account, Transaction, Category, Fund, UserFund, ExchangeRate, CreditCard } from '../types';
+import type { Account, Transaction, Category, Fund, UserFund, ExchangeRate, CreditCard, Note } from '../types';
 
 export function useAccounts() {
   return useQuery({
@@ -413,5 +413,52 @@ export function useDeleteCreditCard() {
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['credit_cards'] }),
+  });
+}
+
+// Notes
+export function useNotes() {
+  return useQuery({
+    queryKey: ['notes'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('notes').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Note[];
+    },
+  });
+}
+
+export function useCreateNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (note: Omit<Note, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase.from('notes').insert(note as any).select().single();
+      if (error) throw error;
+      return data as Note;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes'] }),
+  });
+}
+
+export function useUpdateNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Note> & { id: string }) => {
+      const { data, error } = await supabase.from('notes').update(updates as any).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes'] }),
+  });
+}
+
+export function useDeleteNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('notes').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes'] }),
   });
 }

@@ -81,6 +81,15 @@ export interface UserFund {
   fund?: Fund;
 }
 
+export interface Note {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  color: string;
+  created_at: string;
+}
+
 export interface NetWorthHistory {
   id: string;
   user_id: string;
