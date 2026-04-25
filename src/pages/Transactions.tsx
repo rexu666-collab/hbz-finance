@@ -55,6 +55,7 @@ export default function Transactions() {
       const payload = {
         ...form,
         account_id: form.account_id || null,
+        category_id: form.category_id || null,
         credit_card_id: form.credit_card_id || null,
       };
       if (editingTx) {
