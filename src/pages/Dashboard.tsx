@@ -1,11 +1,11 @@
-import { useAccounts, useTransactions, useUserFunds, useExchangeRates } from '../hooks/useSupabase';
+import { useAccounts, useTransactions, useUserFunds, useExchangeRates, useCreditCards } from '../hooks/useSupabase';
 import { useAuth } from '../contexts/AuthContext';
 import { formatTRY, formatCurrency } from '../lib/utils';
 import { 
   TrendingUp, TrendingDown, 
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
   Coins, Gem, Calendar, CalendarDays, CalendarRange, CalendarCheck,
-  DollarSign, Euro, PoundSterling, Gem as GemIcon
+  DollarSign, Euro, PoundSterling, Gem as GemIcon, CreditCard as CreditCardIcon
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
@@ -20,6 +20,7 @@ export default function Dashboard() {
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
   const { data: transactions, isLoading: txLoading } = useTransactions();
   const { data: userFunds, isLoading: fundsLoading } = useUserFunds();
+  const { data: creditCards, isLoading: cardsLoading } = useCreditCards();
   const { data: exchangeRates } = useExchangeRates();
 
   const getRate = (currency: CurrencyCode) => {
@@ -40,7 +41,9 @@ export default function Dashboard() {
     return sum + (uf.shares * uf.current_price);
   }, 0) || 0;
 
-  const netWorth = totalAssets + fundTotal;
+  const creditCardDebt = creditCards?.reduce((sum, c) => sum + c.current_debt, 0) || 0;
+
+  const netWorth = totalAssets + fundTotal - creditCardDebt;
 
   // Monthly income/expense for summary cards
   const now = new Date();
@@ -60,6 +63,9 @@ export default function Dashboard() {
 
   if (userFunds && userFunds.length > 0) {
     accountDistribution!['Fonlar'] = fundTotal;
+  }
+  if (creditCardDebt > 0) {
+    accountDistribution!['K.K. Borç'] = creditCardDebt;
   }
 
   const pieData = Object.entries(accountDistribution || {}).map(([name, value]) => ({ name, value }));
@@ -135,7 +141,7 @@ export default function Dashboard() {
     'XAU': <GemIcon size={14} />,
   };
 
-  const isLoading = accountsLoading || txLoading || fundsLoading;
+  const isLoading = accountsLoading || txLoading || fundsLoading || cardsLoading;
 
   if (isLoading) {
     return (
@@ -211,18 +217,24 @@ export default function Dashboard() {
             <div className="text-5xl font-bold mb-6 tracking-tight">
               {formatTRY(netWorth)}
             </div>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
-                <ArrowUpRight size={16} className="text-emerald-300" />
-                <span className="text-white/80">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
-              </div>
-              {fundTotal > 0 && (
+              <div className="flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
-                  <ArrowDownRight size={16} className="text-purple-300" />
-                  <span className="text-white/80">Fonlar: {formatTRY(fundTotal)}</span>
+                  <ArrowUpRight size={16} className="text-emerald-300" />
+                  <span className="text-white/80">Varlık: {formatTRY(totalAssets + fundTotal)}</span>
                 </div>
-              )}
-            </div>
+                {fundTotal > 0 && (
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
+                    <ArrowDownRight size={16} className="text-purple-300" />
+                    <span className="text-white/80">Fonlar: {formatTRY(fundTotal)}</span>
+                  </div>
+                )}
+                {creditCardDebt > 0 && (
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2">
+                    <ArrowDownRight size={16} className="text-orange-300" />
+                    <span className="text-white/80">K.K. Borç: {formatTRY(creditCardDebt)}</span>
+                  </div>
+                )}
+              </div>
           </div>
           
           {/* Pie Chart inside hero card */}
@@ -275,12 +287,13 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { icon: <Landmark size={22} />, label: 'Banka', value: totalAssets, gradient: 'from-blue-400 to-indigo-500', color: '#3b82f6' },
           { icon: <Coins size={22} />, label: 'Fonlar', value: fundTotal, gradient: 'from-purple-400 to-violet-500', color: '#8b5cf6' },
           { icon: <TrendingUp size={22} />, label: 'Bu Ay Gelir', value: monthIncome, gradient: 'from-emerald-400 to-teal-500', color: '#10b981' },
           { icon: <TrendingDown size={22} />, label: 'Bu Ay Gider', value: monthExpense, gradient: 'from-red-400 to-pink-500', color: '#ef4444' },
+          { icon: <CreditCardIcon size={22} />, label: 'K.K. Borç', value: creditCardDebt, gradient: 'from-orange-400 to-red-500', color: '#f97316' },
         ].map((card) => (
           <div
             key={card.label}

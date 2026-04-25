@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
 import Transactions from './pages/Transactions';
 import Funds from './pages/Funds';
+import CreditCards from './pages/CreditCards';
 import Settings from './pages/Settings';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/accounts" element={<Accounts />} />
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/funds" element={<Funds />} />
+        <Route path="/credit-cards" element={<CreditCards />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

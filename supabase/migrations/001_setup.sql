@@ -165,6 +165,30 @@ INSERT INTO exchange_rates (currency_code, rate_to_try, rate_type) VALUES
   ('TAM', 14000, 'altin')
 ON CONFLICT (currency_code) DO NOTHING;
 
+-- Credit Cards Table
+CREATE TABLE IF NOT EXISTS credit_cards (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  bank_name TEXT,
+  card_last_four TEXT,
+  credit_limit DECIMAL(15,2) NOT NULL DEFAULT 0,
+  current_debt DECIMAL(15,2) NOT NULL DEFAULT 0,
+  statement_date INTEGER,
+  due_date INTEGER,
+  color TEXT DEFAULT '#ef4444',
+  icon TEXT DEFAULT 'credit-card',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+alter table if exists credit_cards enable row level security;
+
+-- Credit Cards RLS
+CREATE POLICY "credit_cards_select" ON credit_cards FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "credit_cards_insert" ON credit_cards FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "credit_cards_update" ON credit_cards FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "credit_cards_delete" ON credit_cards FOR DELETE USING (auth.uid() = user_id);
+
 -- Migrations for existing databases
 
 -- 1. Add payment_method column to transactions if missing

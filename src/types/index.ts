@@ -81,6 +81,21 @@ export interface NetWorthHistory {
   record_date: string;
 }
 
+export interface CreditCard {
+  id: string;
+  user_id: string;
+  name: string;
+  bank_name: string | null;
+  card_last_four: string | null;
+  credit_limit: number;
+  current_debt: number;
+  statement_date: number | null;
+  due_date: number | null;
+  color: string;
+  icon: string;
+  created_at: string;
+}
+
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   TRY: '₺',
   USD: '$',

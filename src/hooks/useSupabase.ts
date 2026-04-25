@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { Account, Transaction, Category, Fund, UserFund, ExchangeRate } from '../types';
+import type { Account, Transaction, Category, Fund, UserFund, ExchangeRate, CreditCard } from '../types';
 
 export function useAccounts() {
   return useQuery({
@@ -274,5 +274,52 @@ export function useDeleteUserFund() {
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['user_funds'] }),
+  });
+}
+
+// Credit Cards
+export function useCreditCards() {
+  return useQuery({
+    queryKey: ['credit_cards'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('credit_cards').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as CreditCard[];
+    },
+  });
+}
+
+export function useCreateCreditCard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (card: Omit<CreditCard, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase.from('credit_cards').insert(card as any).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['credit_cards'] }),
+  });
+}
+
+export function useUpdateCreditCard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<CreditCard> & { id: string }) => {
+      const { data, error } = await supabase.from('credit_cards').update(updates as any).eq('id', id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['credit_cards'] }),
+  });
+}
+
+export function useDeleteCreditCard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('credit_cards').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['credit_cards'] }),
   });
 }
