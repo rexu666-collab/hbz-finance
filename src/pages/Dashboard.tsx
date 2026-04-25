@@ -1,5 +1,6 @@
 import { useAccounts, useTransactions, useUserFunds, useExchangeRates, useCreditCards } from '../hooks/useSupabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { formatTRY, formatCurrency } from '../lib/utils';
 import { 
   TrendingUp, TrendingDown, 
@@ -299,34 +300,15 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {[
-          { icon: <Landmark size={22} />, label: 'Banka', value: totalAssets, gradient: 'from-blue-400 to-indigo-500', color: '#3b82f6' },
-          { icon: <Coins size={22} />, label: 'Fonlar', value: fundTotal, gradient: 'from-purple-400 to-violet-500', color: '#8b5cf6' },
-          { icon: <TrendingUp size={22} />, label: 'Bu Ay Gelir', value: monthIncome, gradient: 'from-emerald-400 to-teal-500', color: '#10b981' },
-          { icon: <TrendingDown size={22} />, label: 'Bu Ay Gider', value: monthExpense, gradient: 'from-red-400 to-pink-500', color: '#ef4444' },
-          { icon: <CreditCardIcon size={22} />, label: 'K.K. Borç', value: creditCardDebt, gradient: 'from-orange-400 to-red-500', color: '#f97316' },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer card-hover"
-          >
-            <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: `radial-gradient(circle at 50% 0%, ${card.color}20, transparent 70%)` }}
-            />
-            <div className="relative z-10">
-              <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${card.gradient} text-white mb-4 shadow-lg`}>
-                {card.icon}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold">{card.label}</p>
-              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">
-                {formatTRY(card.value)}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <SummaryCards
+        cards={[
+          { icon: <Landmark size={22} />, label: 'Banka', value: totalAssets, gradient: 'from-blue-400 to-indigo-500', color: '#3b82f6', route: '/accounts' },
+          { icon: <Coins size={22} />, label: 'Fonlar', value: fundTotal, gradient: 'from-purple-400 to-violet-500', color: '#8b5cf6', route: '/funds' },
+          { icon: <TrendingUp size={22} />, label: 'Bu Ay Gelir', value: monthIncome, gradient: 'from-emerald-400 to-teal-500', color: '#10b981', route: '/transactions' },
+          { icon: <TrendingDown size={22} />, label: 'Bu Ay Gider', value: monthExpense, gradient: 'from-red-400 to-pink-500', color: '#ef4444', route: '/transactions' },
+          { icon: <CreditCardIcon size={22} />, label: 'K.K. Borç', value: creditCardDebt, gradient: 'from-orange-400 to-red-500', color: '#f97316', route: '/credit-cards' },
+        ]}
+      />
 
       {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
@@ -469,6 +451,35 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryCards({ cards }: { cards: { icon: React.ReactNode; label: string; value: number; gradient: string; color: string; route: string }[] }) {
+  const navigate = useNavigate();
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          onClick={() => navigate(card.route)}
+          className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer card-hover"
+        >
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{ background: `radial-gradient(circle at 50% 0%, ${card.color}20, transparent 70%)` }}
+          />
+          <div className="relative z-10">
+            <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${card.gradient} text-white mb-4 shadow-lg`}>
+              {card.icon}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-semibold">{card.label}</p>
+            <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">
+              {formatTRY(card.value)}
+            </p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
