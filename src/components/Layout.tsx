@@ -31,8 +31,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="flex min-w-0">
-        {/* Sidebar - Desktop */}
-        <div className="hidden lg:flex w-64 h-screen sticky top-0 flex-col bg-gray-100 dark:bg-slate-900 border-r border-gray-300 dark:border-slate-800 shrink-0">
+        {/* Sidebar - Desktop (fixed) */}
+        <div className="hidden lg:flex w-64 h-screen fixed left-0 top-0 flex-col bg-gray-100 dark:bg-slate-900 border-r border-gray-300 dark:border-slate-800 z-30">
           <div className="p-6 border-b border-gray-200 dark:border-slate-800">
             <h1 className="text-2xl font-bold gradient-text">HBZ Finance</h1>
             <p className="text-xs text-gray-500 mt-1">Kişisel Finans Yönetimi</p>
@@ -93,7 +93,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 min-h-screen min-w-0">
+        <div className="flex-1 min-h-screen min-w-0 lg:ml-64">
           <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 pb-24 lg:pb-8">
             {children}
           </main>
