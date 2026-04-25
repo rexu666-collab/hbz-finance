@@ -228,54 +228,64 @@ export default function Dashboard() {
               </div>
           </div>
           
-          {/* Pie Chart inside hero card */}
+          {/* Pie Chart + Legend side by side */}
           {pieData.length > 0 && (
-            <div className="w-full md:w-56 h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={65}
-                    paddingAngle={4}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {pieData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: any) => formatTRY(Number(value))}
-                    contentStyle={{ 
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)', 
-                      border: 'none', 
-                      borderRadius: '16px',
-                      color: '#fff',
-                      fontSize: '13px',
-                      padding: '12px 16px',
-                      boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="flex flex-row-reverse items-center gap-4 md:gap-6">
+              {/* Chart on the right */}
+              <div className="w-32 h-32 sm:w-40 sm:h-40 shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={55}
+                      paddingAngle={3}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {pieData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: any) => formatTRY(Number(value))}
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)', 
+                        border: 'none', 
+                        borderRadius: '16px',
+                        color: '#fff',
+                        fontSize: '13px',
+                        padding: '12px 16px',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Legend list on the left */}
               {(() => {
                 const total = pieData.reduce((sum, d) => sum + d.value, 0);
-                const others = pieData.slice(3);
+                const displayItems = pieData.slice(0, 5);
+                const others = pieData.slice(5);
                 const othersPct = others.reduce((sum, d) => sum + (d.value / total) * 100, 0);
                 return (
-                  <div className="flex flex-wrap gap-3 justify-center -mt-1">
-                    {pieData.slice(0, 3).map((entry, index) => (
-                      <div key={entry.name} className="flex items-center gap-1.5 text-[11px] text-white/80">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                        <span className="font-bold">%{((entry.value / total) * 100).toFixed(1)}</span>
-                        <span>{entry.name}</span>
+                  <div className="flex flex-col gap-1.5 min-w-0">
+                    {displayItems.map((entry, index) => (
+                      <div key={entry.name} className="flex items-center gap-2 text-[11px] sm:text-xs text-white/90">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <span className="font-bold shrink-0">%{((entry.value / total) * 100).toFixed(1)}</span>
+                        <span className="truncate">{entry.name}</span>
                       </div>
                     ))}
-                    {pieData.length > 3 && (
-                      <span className="text-[11px] text-white/50 font-bold">%{othersPct.toFixed(1)} Diğer</span>
+                    {others.length > 0 && (
+                      <div className="flex items-center gap-2 text-[11px] sm:text-xs text-white/60">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[5 % COLORS.length] }} />
+                        <span className="font-bold shrink-0">%{othersPct.toFixed(1)}</span>
+                        <span>Diğer</span>
+                      </div>
                     )}
                   </div>
                 );
