@@ -3,13 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useTransactions, useAccounts, useCategories, useCreditCards, useCreateTransaction, useUpdateTransaction, useDeleteTransaction, useCreateCategory, useDeleteCategory } from '../hooks/useSupabase';
 import { formatCurrency, formatDate, formatTRY } from '../lib/utils';
-import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight, CreditCard, Wallet, Landmark, Zap } from 'lucide-react';
+import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight, CreditCard, Wallet, Landmark } from 'lucide-react';
 import Modal from '../components/Modal';
 import type { TransactionType, CurrencyCode, PaymentMethod } from '../types';
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: React.ReactNode }[] = [
-  { value: 'havale', label: 'Havale', icon: <Landmark size={14} /> },
-  { value: 'eft', label: 'EFT', icon: <Zap size={14} /> },
+  { value: 'havale', label: 'Havale/EFT', icon: <Landmark size={14} /> },
   { value: 'credit_card', label: 'Kredi Kartı', icon: <CreditCard size={14} /> },
   { value: 'cash', label: 'Nakit', icon: <Wallet size={14} /> },
   { value: 'other', label: 'Diğer', icon: <ArrowLeftRight size={14} /> },
@@ -98,7 +97,7 @@ export default function Transactions() {
       amount: tx.amount,
       currency: tx.currency,
       description: tx.description || '',
-      payment_method: tx.payment_method || 'other',
+      payment_method: (tx.payment_method === 'eft' ? 'havale' : tx.payment_method) || 'other',
       credit_card_id: tx.credit_card_id || '',
       transaction_date: tx.transaction_date,
     });
@@ -349,7 +348,7 @@ export default function Transactions() {
             </div>
           </div>
 
-          {form.payment_method !== 'credit_card' && (
+          {form.payment_method === 'havale' && (
             <div>
               <select
                 value={form.account_id}
