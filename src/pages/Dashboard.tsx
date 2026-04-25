@@ -6,11 +6,11 @@ import {
   TrendingUp, TrendingDown, 
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
   Coins, Gem,
-  DollarSign, Euro, PoundSterling, Gem as GemIcon, CreditCard as CreditCardIcon
+  DollarSign, Euro, PoundSterling, Gem as GemIcon, CreditCard as CreditCardIcon,
+  CreditCard
 } from 'lucide-react';
 import { 
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip
 } from 'recharts';
 import type { Account, CurrencyCode } from '../types';
 
@@ -96,39 +96,6 @@ export default function Dashboard() {
   const weeklyReturn = getPeriodReturn(7);
   const monthlyReturn = getPeriodReturn(30);
   const yearlyReturn = getPeriodReturn(365);
-
-  // Real Net Worth History from transactions
-  const getNetWorthHistory = () => {
-    if (!transactions || transactions.length === 0) {
-      return [{ date: 'Bugün', value: netWorth }];
-    }
-    
-    const sortedTx = [...transactions].sort((a, b) => 
-      new Date(a.transaction_date).getTime() - new Date(b.transaction_date).getTime()
-    );
-    
-    const startDate = new Date(sortedTx[0].transaction_date);
-    const today = new Date();
-    const history: { date: string; value: number }[] = [];
-    
-    const points = 6;
-    for (let i = 0; i < points; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + Math.floor((today.getTime() - startDate.getTime()) / (points - 1) * i));
-      
-      const cumTx = sortedTx.filter(tx => new Date(tx.transaction_date) <= date);
-      const cumIncome = cumTx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
-      const cumExpense = cumTx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
-      const cumNet = cumIncome - cumExpense + totalAssets;
-      
-      const label = i === points - 1 ? 'Bugün' : date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
-      history.push({ date: label, value: Math.max(0, cumNet) });
-    }
-    
-    return history;
-  };
-
-  const netWorthHistory = getNetWorthHistory();
 
   // Category spending analysis
   const categoryData = transactions
@@ -345,91 +312,107 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Net Worth Trend */}
-        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden card-hover">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-            <Activity size={18} className="text-indigo-500" />
-            Net Varlık Trendi
+        {/* Credit Card Status */}
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 sm:p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden card-hover">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-400 via-red-500 to-pink-500" />
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+            <CreditCard size={18} className="text-orange-500" />
+            Kredi Kartı Durumu
           </h3>
-          <div className="h-[200px] sm:h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={netWorthHistory}>
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="50%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#ec4899" />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} opacity={0.5} />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
-              <Tooltip 
-                formatter={(value: any) => [formatTRY(Number(value)), 'Net Varlık']}
-                contentStyle={{ 
-                  backgroundColor: 'rgba(15, 23, 42, 0.95)', 
-                  border: 'none', 
-                  borderRadius: '16px',
-                  color: '#fff',
-                  fontSize: '13px',
-                  padding: '12px 16px',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="value" 
-                stroke="url(#strokeGradient)" 
-                strokeWidth={3} 
-                fillOpacity={1} 
-                fill="url(#colorValue)" 
-              />
-            </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Category Spending */}
-        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden card-hover">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-            <TrendingDown size={18} className="text-pink-500" />
-            Kategori Harcamaları
-          </h3>
-          {categoryPieData.length > 0 ? (
-            <div className="h-[200px] sm:h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryPieData} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" opacity={0.5} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₺${(v / 1000).toFixed(0)}K`} />
-                <YAxis dataKey="name" type="category" width={70} tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  formatter={(value: any) => [formatTRY(Number(value)), 'Harcama']}
-                  contentStyle={{ 
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)', 
-                    border: 'none', 
-                    borderRadius: '16px',
-                    color: '#fff',
-                    fontSize: '13px',
-                    padding: '12px 16px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-                  }}
-                />
-                <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                  {categoryPieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          {creditCards && creditCards.length > 0 ? (
+            <div className="space-y-4 max-h-[260px] overflow-y-auto pr-1">
+              {creditCards.map((card) => {
+                const usage = card.credit_limit > 0 ? (card.current_debt / card.credit_limit) * 100 : 0;
+                const available = card.credit_limit - card.current_debt;
+                return (
+                  <div key={card.id} className="p-3 rounded-xl bg-gray-200/50 dark:bg-slate-700/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-sm text-gray-800 dark:text-white">{card.name}</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${usage >= 90 ? 'bg-red-100 text-red-600' : usage >= 70 ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                        %{usage.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-300 dark:bg-slate-600 rounded-full overflow-hidden mb-2">
+                      <div
+                        className={`h-full rounded-full transition-all ${usage >= 90 ? 'bg-red-500' : usage >= 70 ? 'bg-orange-500' : 'bg-emerald-500'}`}
+                        style={{ width: `${Math.min(usage, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-slate-400">
+                      <span>Borç: {formatTRY(card.current_debt)}</span>
+                      <span>Kalan: {formatTRY(available)}</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
-            <div className="h-[200px] sm:h-[240px] flex items-center justify-center text-gray-400 flex-col gap-3">
+            <div className="h-[200px] flex items-center justify-center text-gray-400 flex-col gap-3">
+              <CreditCard size={40} className="opacity-30" />
+              <p>Henüz kredi kartı eklenmemiş</p>
+            </div>
+          )}
+        </div>
+
+        {/* Category Spending Pie */}
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 sm:p-6 border border-gray-300 dark:border-slate-700 shadow-sm relative overflow-hidden card-hover">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+            <TrendingDown size={18} className="text-pink-500" />
+            Kategorilere Göre Harcamalar
+          </h3>
+          {categoryPieData.length > 0 ? (
+            <div className="flex flex-row-reverse items-center gap-4">
+              <div className="w-32 h-32 sm:w-36 sm:h-36 shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryPieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={28}
+                      outerRadius={50}
+                      paddingAngle={3}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {categoryPieData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: any) => formatTRY(Number(value))}
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: 'none',
+                        borderRadius: '16px',
+                        color: '#fff',
+                        fontSize: '13px',
+                        padding: '12px 16px',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {(() => {
+                const total = categoryPieData.reduce((sum, d) => sum + d.value, 0);
+                return (
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                    {categoryPieData.map((entry, index) => (
+                      <div key={entry.name} className="flex items-center gap-2 text-[11px] sm:text-xs text-gray-700 dark:text-white/90">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <span className="font-bold shrink-0">%{((entry.value / total) * 100).toFixed(1)}</span>
+                        <span className="truncate">{entry.name}</span>
+                        <span className="text-gray-400 dark:text-slate-400 shrink-0 ml-auto">{formatTRY(entry.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center text-gray-400 flex-col gap-3">
               <Gem size={40} className="opacity-30" />
               <p>Henüz gider kaydı yok</p>
             </div>
