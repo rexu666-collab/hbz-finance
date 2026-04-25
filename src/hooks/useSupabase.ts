@@ -135,7 +135,6 @@ export function useCategories() {
     queryFn: async () => {
       const { data, error } = await supabase.from('categories').select('*').order('name');
       if (error) throw error;
-      // Remove duplicates by name (same user may have duplicate entries)
       const seen = new Set<string>();
       return (data as Category[]).filter((cat) => {
         if (seen.has(cat.name)) return false;
@@ -143,6 +142,29 @@ export function useCategories() {
         return true;
       });
     },
+  });
+}
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (category: Omit<Category, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase.from('categories').insert(category as any).select().single();
+      if (error) throw error;
+      return data as Category;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categories'] }),
+  });
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['categories'] }),
   });
 }
 

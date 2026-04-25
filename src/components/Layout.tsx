@@ -37,10 +37,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <h1 className="text-2xl font-bold gradient-text">HBZ Finance</h1>
             <p className="text-xs text-gray-500 mt-1">Kişisel Finans Yönetimi</p>
           </div>
-          <div className="flex-1 overflow-y-auto py-4">
+          <div className="flex-none py-4">
             <Navigation />
           </div>
-          <div className="p-4 border-t border-gray-200 dark:border-slate-800 space-y-2">
+          <div className="mt-auto p-4 border-t border-gray-200 dark:border-slate-800 space-y-2">
             <button
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-800 transition-colors"
