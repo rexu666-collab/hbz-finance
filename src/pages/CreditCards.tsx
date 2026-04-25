@@ -6,74 +6,61 @@ import { formatTRY } from '../lib/utils';
 import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
 import Modal from '../components/Modal';
 
-// Real bank logos from Wikimedia Commons (SVG)
-const BANK_LOGO_URLS: Record<string, string> = {
-  garanti: 'https://upload.wikimedia.org/wikipedia/commons/9/9f/Garanti_BBVA_logo.svg',
-  garantibbva: 'https://upload.wikimedia.org/wikipedia/commons/9/9f/Garanti_BBVA_logo.svg',
-  bbva: 'https://upload.wikimedia.org/wikipedia/commons/9/9f/Garanti_BBVA_logo.svg',
-  akbank: 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Akbank_logo.svg',
-  isbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Turkiye_Is_Bankasi_logo.svg',
-  isbankasi: 'https://upload.wikimedia.org/wikipedia/commons/3/3a/Turkiye_Is_Bankasi_logo.svg',
-  yapikredi: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Yapı_Kredi_logo.svg',
-  ykb: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Yapı_Kredi_logo.svg',
-  ziraat: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/T.C._Ziraat_Bankası_logo.svg',
-  ziraatbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/T.C._Ziraat_Bankası_logo.svg',
-  halkbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Halkbank_logo.svg',
-  vakifbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/VakifBank_logo.svg',
-  ing: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/ING_Group_N.V._Logo.svg',
-  qnb: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/QNB_Finansbank_logo.svg',
-  finansbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/QNB_Finansbank_logo.svg',
-  qnbfinansbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/QNB_Finansbank_logo.svg',
-  hsbc: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/HSBC_logo.svg',
-  citibank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Citibank_logo.svg',
-  denizbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/DenizBank_logo.svg',
-  teb: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Turk_Ekonomi_Bankasi_logo.svg',
-  turkekonomibankasi: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Turk_Ekonomi_Bankasi_logo.svg',
-  fibabanka: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Fibabanka_logo.svg',
-  odea: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Odeabank_logo.svg',
-  odeabank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Odeabank_logo.svg',
-  burgan: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Burgan_Bank_logo.svg',
-  aktifbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Aktif_Bank_logo.svg',
-  albaraka: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Albaraka_Turk_logo.svg',
-  albarakatürk: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Albaraka_Turk_logo.svg',
-  kuveyt: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Kuveyt_Turk_logo.svg',
-  kuveytturk: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Kuveyt_Turk_logo.svg',
-  turkiyefinans: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Turkiye_Finans_logo.svg',
-  ptt: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/PTT_logo.svg',
-  sekerbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Sekerbank_logo.svg',
-  anadolubank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Anadolubank_logo.svg',
-  ccf: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/CCF_logo.svg',
-  fortis: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Fortis_logo.svg',
-  mufg: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/MUFG_logo.svg',
-  nurol: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Nurol_Bank_logo.svg',
-  rabobank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Rabobank_logo.svg',
-  sinop: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Sinop_Bank_logo.svg',
-  tekstil: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Tekstil_Bankasi_logo.svg',
-  verus: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Verus_Bank_logo.svg',
-  turkishbank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Turkish_Bank_logo.svg',
-  alternatif: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Alternatif_Bank_logo.svg',
-  abank: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Alternatif_Bank_logo.svg',
-  enpara: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Enpara_logo.svg',
-  enparacom: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/Enpara_logo.svg',
+// Local bank logo files in /public/bank-logos/
+const LOCAL_BANK_LOGOS: Record<string, string> = {
+  garanti: '/bank-logos/garanti.svg',
+  garantibbva: '/bank-logos/garanti.svg',
+  bbva: '/bank-logos/garanti.svg',
+  akbank: '/bank-logos/akbank.svg',
+  isbank: '/bank-logos/isbank.svg',
+  isbankasi: '/bank-logos/isbank.svg',
+  turkiyeisbankasi: '/bank-logos/isbank.svg',
+  ziraat: '/bank-logos/ziraat.svg',
+  ziraatbank: '/bank-logos/ziraat.svg',
+  ziraatbankasi: '/bank-logos/ziraat.svg',
+  halkbank: '/bank-logos/halkbank.svg',
+  teb: '/bank-logos/teb.svg',
+  turkekonomibankasi: '/bank-logos/teb.svg',
+  ing: '/bank-logos/ing.svg',
+  ingbank: '/bank-logos/ing.svg',
 };
 
-function getBankSlug(name: string): string | null {
+function getBankLogoPath(name: string): string | null {
   const n = name.toLowerCase().replace(/[^a-zğüşıöç]/gi, '');
-  for (const slug in BANK_LOGO_URLS) {
-    if (n.includes(slug)) return slug;
+  for (const slug in LOCAL_BANK_LOGOS) {
+    if (n.includes(slug)) return LOCAL_BANK_LOGOS[slug];
   }
   return null;
 }
 
-function BankLogo({ bankName, fallbackColor }: { bankName: string; fallbackColor: string }) {
-  const [error, setError] = useState(false);
-  const slug = getBankSlug(bankName);
-  const url = slug ? BANK_LOGO_URLS[slug] : null;
+function getBankColor(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('garanti')) return '#F47920';
+  if (n.includes('akbank')) return '#E30613';
+  if (n.includes('is') && (n.includes('bank') || n.includes('bankasi'))) return '#633588';
+  if (n.includes('ziraat')) return '#CC0000';
+  if (n.includes('halkbank')) return '#FF6600';
+  if (n.includes('yapikredi') || n.includes('ykb')) return '#0047AB';
+  if (n.includes('vakif')) return '#FFD700';
+  if (n.includes('ing')) return '#FF6200';
+  if (n.includes('qnb') || n.includes('finansbank')) return '#00A9E0';
+  if (n.includes('deniz')) return '#0088CC';
+  if (n.includes('teb')) return '#003399';
+  if (n.includes('fibabanka') || n.includes('fiba')) return '#0055A4';
+  if (n.includes('hsbc')) return '#DB0011';
+  if (n.includes('enpara')) return '#00C853';
+  if (n.includes('odeabank') || n.includes('odea')) return '#6B2D5C';
+  return '#ef4444';
+}
 
-  if (url && !error) {
+function BankLogo({ bankName }: { bankName: string }) {
+  const [error, setError] = useState(false);
+  const path = getBankLogoPath(bankName);
+
+  if (path && !error) {
     return (
       <img
-        src={url}
+        src={path}
         alt={bankName}
         className="w-11 h-11 object-contain rounded-xl bg-white dark:bg-white p-1 shadow-lg shrink-0"
         onError={() => setError(true)}
@@ -82,20 +69,18 @@ function BankLogo({ bankName, fallbackColor }: { bankName: string; fallbackColor
     );
   }
 
-  // Fallback: colored circle with initial
+  const color = getBankColor(bankName);
   const initial = bankName.charAt(0).toUpperCase();
   return (
     <div
       className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shrink-0"
-      style={{ backgroundColor: fallbackColor, color: '#fff' }}
+      style={{ backgroundColor: color, color: '#fff' }}
       title={bankName}
     >
       <span className="text-base font-bold">{initial}</span>
     </div>
   );
 }
-
-const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'];
 
 export default function CreditCards() {
   const { user } = useAuth();
@@ -115,14 +100,12 @@ export default function CreditCards() {
     current_debt: 0,
     statement_date: undefined as number | undefined,
     due_date: undefined as number | undefined,
-    color: '#ef4444',
-    icon: 'credit-card',
   });
 
   const resetForm = () => {
     setForm({
       name: '', bank_name: '', card_last_four: '', credit_limit: 0, current_debt: 0,
-      statement_date: undefined, due_date: undefined, color: '#ef4444', icon: 'credit-card',
+      statement_date: undefined, due_date: undefined,
     });
     setEditingCard(null);
   };
@@ -134,6 +117,7 @@ export default function CreditCards() {
       return;
     }
     try {
+      const color = getBankColor(form.bank_name || form.name);
       const data: any = {
         ...form,
         user_id: user.id,
@@ -141,6 +125,8 @@ export default function CreditCards() {
         bank_name: form.bank_name || null,
         statement_date: form.statement_date || null,
         due_date: form.due_date || null,
+        color,
+        icon: 'credit-card',
       };
       if (editingCard) {
         await updateCard.mutateAsync({ id: editingCard.id, ...data });
@@ -167,8 +153,6 @@ export default function CreditCards() {
       current_debt: card.current_debt,
       statement_date: card.statement_date ?? undefined,
       due_date: card.due_date ?? undefined,
-      color: card.color || '#ef4444',
-      icon: card.icon || 'credit-card',
     });
     setModalOpen(true);
   };
@@ -237,7 +221,7 @@ export default function CreditCards() {
             <div key={card.id} className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm card-hover group">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <BankLogo bankName={card.bank_name || card.name} fallbackColor={card.color || '#ef4444'} />
+                  <BankLogo bankName={card.bank_name || card.name} />
                   <div>
                     <h3 className="font-semibold text-gray-800 dark:text-white">{card.name}</h3>
                     <p className="text-xs text-gray-500 dark:text-slate-400">
@@ -411,21 +395,6 @@ export default function CreditCards() {
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 placeholder="Örn: 25"
               />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Renk</label>
-            <div className="flex gap-2 flex-wrap">
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setForm({ ...form, color })}
-                  className={`w-8 h-8 rounded-full transition-transform ${form.color === color ? 'scale-125 ring-2 ring-offset-2 ring-gray-400 dark:ring-gray-600' : ''}`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
             </div>
           </div>
 
