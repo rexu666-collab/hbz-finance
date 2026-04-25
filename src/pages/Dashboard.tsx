@@ -261,17 +261,25 @@ export default function Dashboard() {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="flex flex-wrap gap-3 justify-center -mt-1">
-                {pieData.slice(0, 3).map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-1.5 text-[11px] text-white/80">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                    <span>{entry.name}</span>
+              {(() => {
+                const total = pieData.reduce((sum, d) => sum + d.value, 0);
+                const others = pieData.slice(3);
+                const othersPct = others.reduce((sum, d) => sum + (d.value / total) * 100, 0);
+                return (
+                  <div className="flex flex-wrap gap-3 justify-center -mt-1">
+                    {pieData.slice(0, 3).map((entry, index) => (
+                      <div key={entry.name} className="flex items-center gap-1.5 text-[11px] text-white/80">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                        <span className="font-bold">%{((entry.value / total) * 100).toFixed(1)}</span>
+                        <span>{entry.name}</span>
+                      </div>
+                    ))}
+                    {pieData.length > 3 && (
+                      <span className="text-[11px] text-white/50 font-bold">%{othersPct.toFixed(1)} Diğer</span>
+                    )}
                   </div>
-                ))}
-                {pieData.length > 3 && (
-                  <span className="text-[11px] text-white/50">+{pieData.length - 3}</span>
-                )}
-              </div>
+                );
+              })()}
             </div>
           )}
         </div>
