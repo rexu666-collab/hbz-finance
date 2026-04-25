@@ -4,7 +4,7 @@ import { formatTRY, formatCurrency } from '../lib/utils';
 import { 
   TrendingUp, TrendingDown, 
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
-  Coins, Gem, Calendar, CalendarDays, CalendarRange, CalendarCheck,
+  Coins, Gem,
   DollarSign, Euro, PoundSterling, Gem as GemIcon, CreditCard as CreditCardIcon
 } from 'lucide-react';
 import { 
@@ -172,12 +172,24 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Returns */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <ReturnCard label="Günlük Getiri" value={dailyReturn} icon={<Calendar size={18} />} />
-        <ReturnCard label="Haftalık Getiri" value={weeklyReturn} icon={<CalendarDays size={18} />} />
-        <ReturnCard label="Aylık Getiri" value={monthlyReturn} icon={<CalendarRange size={18} />} />
-        <ReturnCard label="Yıllık Getiri" value={yearlyReturn} icon={<CalendarCheck size={18} />} />
+      {/* Returns compact bar */}
+      <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 divide-x divide-gray-300 dark:divide-slate-700 overflow-hidden">
+        {[
+          { label: 'Günlük', value: dailyReturn },
+          { label: 'Haftalık', value: weeklyReturn },
+          { label: 'Aylık', value: monthlyReturn },
+          { label: 'Yıllık', value: yearlyReturn },
+        ].map((item) => {
+          const isPositive = item.value >= 0;
+          return (
+            <div key={item.label} className="flex-1 px-3 py-2.5 text-center">
+              <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider block leading-tight">{item.label}</span>
+              <span className={`text-sm font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                {isPositive ? '+' : ''}{formatTRY(item.value)}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Exchange Rates Ticker */}
@@ -461,23 +473,4 @@ export default function Dashboard() {
   );
 }
 
-function ReturnCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
-  const isPositive = value >= 0;
-  return (
-    <div className="relative bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm overflow-hidden group cursor-pointer card-hover">
-      <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ background: `radial-gradient(circle at 50% 0%, ${isPositive ? '#10b981' : '#ef4444'}15, transparent 70%)` }}
-      />
-      <div className="relative z-10">
-        <div className={`p-2 rounded-lg inline-flex mb-3 ${isPositive ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
-          {icon}
-        </div>
-        <p className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-wider font-bold">{label}</p>
-        <p className={`text-2xl font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-          {isPositive ? '+' : ''}{formatTRY(value)}
-        </p>
-      </div>
-    </div>
-  );
-}
+
