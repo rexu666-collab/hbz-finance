@@ -69,9 +69,38 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (transaction: Omit<Transaction, 'id' | 'created_at'>) => {
-      const { data: txData, error: txError } = await supabase.from('transactions').insert(transaction as any).select().single();
+      const count = transaction.installment_count || 1;
+      const isInstallment = count > 1;
+      const monthlyAmount = isInstallment ? transaction.amount / count : transaction.amount;
+
+      // Insert main/first record
+      const { data: parentTx, error: txError } = await supabase
+        .from('transactions')
+        .insert({ ...transaction, amount: monthlyAmount, installment_number: 1 } as any)
+        .select()
+        .single();
       if (txError) throw txError;
-      
+
+      // Insert remaining installment records
+      if (isInstallment && parentTx) {
+        const installments = [];
+        for (let i = 2; i <= count; i++) {
+          const nextDate = new Date(transaction.transaction_date);
+          nextDate.setMonth(nextDate.getMonth() + (i - 1));
+          installments.push({
+            ...transaction,
+            amount: monthlyAmount,
+            installment_number: i,
+            parent_transaction_id: parentTx.id,
+            transaction_date: nextDate.toISOString().split('T')[0],
+          });
+        }
+        if (installments.length > 0) {
+          const { error: instError } = await supabase.from('transactions').insert(installments as any);
+          if (instError) throw instError;
+        }
+      }
+
       // Update account balance (only if account_id exists)
       if (transaction.account_id) {
         const { data: account } = await supabase.from('accounts').select('balance').eq('id', transaction.account_id).single();
@@ -82,7 +111,7 @@ export function useCreateTransaction() {
         }
       }
 
-      // Update credit card debt (if credit_card_id exists and it's an expense)
+      // Update credit card debt (full amount at once for installments too)
       if (transaction.credit_card_id && transaction.type === 'expense') {
         const { data: card } = await supabase.from('credit_cards').select('current_debt').eq('id', transaction.credit_card_id).single();
         if (card) {
@@ -91,11 +120,12 @@ export function useCreateTransaction() {
         }
       }
 
-      return txData;
+      return parentTx;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['credit_cards'] });
     },
   });
 }

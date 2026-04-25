@@ -55,6 +55,10 @@ CREATE TABLE IF NOT EXISTS transactions (
   currency TEXT NOT NULL DEFAULT 'TRY',
   description TEXT,
   payment_method TEXT DEFAULT 'other',
+  credit_card_id UUID REFERENCES credit_cards(id) ON DELETE SET NULL,
+  installment_count INTEGER DEFAULT 1,
+  installment_number INTEGER DEFAULT 1,
+  parent_transaction_id UUID REFERENCES transactions(id) ON DELETE CASCADE,
   transaction_date DATE NOT NULL DEFAULT CURRENT_DATE,
   created_at TIMESTAMPTZ DEFAULT now()
 );

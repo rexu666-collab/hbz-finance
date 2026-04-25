@@ -46,6 +46,7 @@ export default function Transactions() {
     description: '',
     payment_method: 'other' as PaymentMethod,
     credit_card_id: '',
+    installment_count: 1,
     transaction_date: new Date().toISOString().split('T')[0],
   });
 
@@ -61,6 +62,8 @@ export default function Transactions() {
         account_id: form.account_id || null,
         category_id: form.category_id || null,
         credit_card_id: form.credit_card_id || null,
+        installment_number: 1,
+        parent_transaction_id: null,
       };
       if (editingTx) {
         await updateTransaction.mutateAsync({ id: editingTx.id, ...payload });
@@ -80,6 +83,7 @@ export default function Transactions() {
         description: '',
         payment_method: 'other',
         credit_card_id: '',
+        installment_count: 1,
         transaction_date: new Date().toISOString().split('T')[0],
       });
     } catch (err: any) {
@@ -99,6 +103,7 @@ export default function Transactions() {
       description: tx.description || '',
       payment_method: (tx.payment_method === 'eft' ? 'havale' : tx.payment_method) || 'other',
       credit_card_id: tx.credit_card_id || '',
+      installment_count: tx.installment_count || 1,
       transaction_date: tx.transaction_date,
     });
     setModalOpen(true);
@@ -280,7 +285,14 @@ export default function Transactions() {
                     {getTypeIcon(tx.type)}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{tx.description || tx.accounts?.name}</p>
+                    <p className="font-medium text-sm text-gray-800 dark:text-white truncate">
+                      {tx.description || tx.accounts?.name}
+                      {tx.installment_count > 1 && (
+                        <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                          {tx.installment_number}/{tx.installment_count}
+                        </span>
+                      )}
+                    </p>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 mt-0.5 truncate">
                       {tx.accounts?.name && <span className="truncate">{tx.accounts.name}</span>}
                       {tx.credit_cards?.name && (
@@ -383,19 +395,45 @@ export default function Transactions() {
               ))}
             </div>
             {form.payment_method === 'credit_card' && (
-              <div className="mt-1.5">
-                <select
-                  value={form.credit_card_id}
-                  onChange={(e) => setForm({ ...form, credit_card_id: e.target.value })}
-                  className="w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-xs text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                  required={form.payment_method === 'credit_card'}
-                >
-                  <option value="">Kredi kartı seçin</option>
-                  {creditCards?.map((card) => (
-                    <option key={card.id} value={card.id}>{card.name} {card.card_last_four ? `(*${card.card_last_four})` : ''}</option>
-                  ))}
-                </select>
-              </div>
+              <>
+                <div className="mt-1.5">
+                  <select
+                    value={form.credit_card_id}
+                    onChange={(e) => setForm({ ...form, credit_card_id: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-xs text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    required={form.payment_method === 'credit_card'}
+                  >
+                    <option value="">Kredi kartı seçin</option>
+                    {creditCards?.map((card) => (
+                      <option key={card.id} value={card.id}>{card.name} {card.card_last_four ? `(*${card.card_last_four})` : ''}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="text-[10px] text-gray-500 dark:text-slate-400">Taksit:</span>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 6, 9, 12].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setForm({ ...form, installment_count: n })}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition-all ${
+                          form.installment_count === n
+                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                            : 'border-gray-300 dark:border-slate-700 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {n === 1 ? 'Tek' : `${n}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {form.installment_count > 1 && form.amount > 0 && (
+                  <div className="mt-0.5 text-[10px] text-indigo-500 dark:text-indigo-400">
+                    Aylık tutar: {formatCurrency(form.amount / form.installment_count, form.currency)} x {form.installment_count} ay
+                  </div>
+                )}
+              </>
             )}
           </div>
 

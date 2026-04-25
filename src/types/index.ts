@@ -34,6 +34,9 @@ export interface Transaction {
   description: string;
   payment_method: PaymentMethod;
   credit_card_id: string | null;
+  installment_count: number;
+  installment_number: number;
+  parent_transaction_id: string | null;
   transaction_date: string;
   created_at: string;
 }
