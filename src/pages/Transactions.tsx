@@ -329,16 +329,16 @@ export default function Transactions() {
         onClose={() => { setModalOpen(false); setEditingTx(null); }}
         title={editingTx ? 'İşlem Düzenle' : 'Yeni İşlem'}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-2.5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">İşlem Tipi</label>
-            <div className="grid grid-cols-3 gap-2">
+            <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">İşlem Tipi</label>
+            <div className="grid grid-cols-3 gap-1.5">
               {(['income', 'expense', 'transfer'] as TransactionType[]).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setForm({ ...form, type })}
-                  className={`p-2 sm:p-3 rounded-xl border text-xs sm:text-sm font-medium transition-all ${
+                  className={`py-1.5 px-2 rounded-lg border text-xs font-medium transition-all ${
                     form.type === type
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                       : 'border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'
@@ -352,11 +352,11 @@ export default function Transactions() {
 
           {form.payment_method !== 'credit_card' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Hesap</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Hesap</label>
               <select
                 value={form.account_id}
                 onChange={(e) => setForm({ ...form, account_id: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 required
               >
                 <option value="">Hesap seçin</option>
@@ -368,14 +368,14 @@ export default function Transactions() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Ödeme Yöntemi</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Ödeme Yöntemi</label>
+            <div className="grid grid-cols-3 gap-1.5">
               {PAYMENT_METHODS.map((method) => (
                 <button
                   key={method.value}
                   type="button"
                   onClick={() => setForm({ ...form, payment_method: method.value })}
-                  className={`flex items-center justify-center gap-2 p-2 sm:p-2.5 rounded-xl border text-xs font-medium transition-all ${
+                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-[11px] font-medium transition-all ${
                     form.payment_method === method.value
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                       : 'border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'
@@ -387,12 +387,12 @@ export default function Transactions() {
               ))}
             </div>
             {form.payment_method === 'credit_card' && (
-              <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Kredi Kartı</label>
+              <div className="mt-2">
+                <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Kredi Kartı</label>
                 <select
                   value={form.credit_card_id}
                   onChange={(e) => setForm({ ...form, credit_card_id: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                   required={form.payment_method === 'credit_card'}
                 >
                   <option value="">Kredi kartı seçin</option>
@@ -405,12 +405,12 @@ export default function Transactions() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Kategori</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium text-gray-700 dark:text-slate-300">Kategori</label>
               <button
                 type="button"
                 onClick={() => setCategoryModalOpen(true)}
-                className="text-xs text-indigo-500 hover:text-indigo-600 font-medium"
+                className="text-[11px] text-indigo-500 hover:text-indigo-600 font-medium"
               >
                 Yönet
               </button>
@@ -418,7 +418,7 @@ export default function Transactions() {
             <select
               value={form.category_id}
               onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
             >
               <option value="">Kategori seçin (isteğe bağlı)</option>
               {categories?.filter(c => c.type === form.type).map((cat) => (
@@ -427,24 +427,24 @@ export default function Transactions() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Tutar</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Tutar</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Para Birimi</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Para Birimi</label>
               <select
                 value={form.currency}
                 onChange={(e) => setForm({ ...form, currency: e.target.value as CurrencyCode })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               >
                 {['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY'].map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -454,32 +454,32 @@ export default function Transactions() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Açıklama</label>
+            <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Açıklama</label>
             <input
               type="text"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               placeholder="İşlem açıklaması"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Tarih</label>
+            <label className="block text-xs font-medium text-gray-700 dark:text-slate-300 mb-1">Tarih</label>
             <input
               type="date"
               value={form.transaction_date}
               onChange={(e) => setForm({ ...form, transaction_date: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-sm text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               required
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => { setModalOpen(false); setEditingTx(null); }} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={() => { setModalOpen(false); setEditingTx(null); }} className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors font-medium">
               İptal
             </button>
-            <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
+            <button type="submit" className="flex-1 px-3 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-sm text-white font-medium hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25">
               {editingTx ? 'Güncelle' : 'Kaydet'}
             </button>
           </div>
