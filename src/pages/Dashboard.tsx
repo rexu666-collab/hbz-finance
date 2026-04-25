@@ -55,21 +55,32 @@ export default function Dashboard() {
 
   const recentTransactions = transactions?.slice(0, 5) || [];
 
-  // Account distribution for pie chart
-  const accountDistribution = accounts?.reduce((acc: Record<string, number>, account) => {
-    const value = getAccountValueTRY(account);
-    acc['Banka'] = (acc['Banka'] || 0) + value;
-    return acc;
-  }, {});
+  // Account distribution for pie chart - show each account individually
+  const getPieData = () => {
+    const data: { name: string; value: number }[] = [];
+    
+    // Each account individually
+    accounts?.forEach((account) => {
+      const value = getAccountValueTRY(account);
+      if (value > 0) {
+        data.push({ name: account.name, value });
+      }
+    });
+    
+    // Funds
+    if (fundTotal > 0) {
+      data.push({ name: 'Fonlar', value: fundTotal });
+    }
+    
+    // Credit card debt (shown as negative)
+    if (creditCardDebt > 0) {
+      data.push({ name: 'K.K. Borç', value: creditCardDebt });
+    }
+    
+    return data;
+  };
 
-  if (userFunds && userFunds.length > 0) {
-    accountDistribution!['Fonlar'] = fundTotal;
-  }
-  if (creditCardDebt > 0) {
-    accountDistribution!['K.K. Borç'] = creditCardDebt;
-  }
-
-  const pieData = Object.entries(accountDistribution || {}).map(([name, value]) => ({ name, value }));
+  const pieData = getPieData();
 
   // Returns calculation
   const getPeriodReturn = (days: number) => {
@@ -173,43 +184,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Returns compact bar */}
-      <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 divide-x divide-gray-300 dark:divide-slate-700 overflow-hidden">
-        {[
-          { label: 'Günlük', value: dailyReturn },
-          { label: 'Haftalık', value: weeklyReturn },
-          { label: 'Aylık', value: monthlyReturn },
-          { label: 'Yıllık', value: yearlyReturn },
-        ].map((item) => {
-          const isPositive = item.value >= 0;
-          return (
-            <div key={item.label} className="flex-1 px-3 py-2.5 text-center">
-              <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider block leading-tight">{item.label}</span>
-              <span className={`text-sm font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                {isPositive ? '+' : ''}{formatTRY(item.value)}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Exchange Rates Ticker */}
-      {majorRates.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto pb-1">
-          {majorRates.map((rate) => (
-            <div 
-              key={rate.currency_code}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 whitespace-nowrap"
-            >
-              <span className="text-indigo-500">{rateIcons[rate.currency_code]}</span>
-              <span className="text-xs font-bold text-gray-500 dark:text-slate-400">{rate.currency_code}</span>
-              <span className="text-sm font-bold text-gray-800 dark:text-white">{rate.rate_to_try.toFixed(2)}</span>
-              <span className="text-xs text-gray-400">₺</span>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Net Worth Card - Hero with Pie Chart */}
       <div 
         className="relative overflow-hidden rounded-2xl sm:rounded-3xl animated-gradient p-5 sm:p-8 text-white shadow-2xl"
@@ -302,6 +276,43 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Returns compact bar */}
+      <div className="flex items-center bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 divide-x divide-gray-300 dark:divide-slate-700 overflow-hidden">
+        {[
+          { label: 'Günlük', value: dailyReturn },
+          { label: 'Haftalık', value: weeklyReturn },
+          { label: 'Aylık', value: monthlyReturn },
+          { label: 'Yıllık', value: yearlyReturn },
+        ].map((item) => {
+          const isPositive = item.value >= 0;
+          return (
+            <div key={item.label} className="flex-1 px-3 py-2.5 text-center">
+              <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider block leading-tight">{item.label}</span>
+              <span className={`text-sm font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                {isPositive ? '+' : ''}{formatTRY(item.value)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Exchange Rates Ticker */}
+      {majorRates.length > 0 && (
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {majorRates.map((rate) => (
+            <div 
+              key={rate.currency_code}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 whitespace-nowrap"
+            >
+              <span className="text-indigo-500">{rateIcons[rate.currency_code]}</span>
+              <span className="text-xs font-bold text-gray-500 dark:text-slate-400">{rate.currency_code}</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-white">{rate.rate_to_try.toFixed(2)}</span>
+              <span className="text-xs text-gray-400">₺</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Summary Cards */}
       <SummaryCards
