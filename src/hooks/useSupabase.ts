@@ -57,10 +57,10 @@ export function useTransactions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('transactions')
-        .select('*, accounts(name), categories(name)')
+        .select('*, accounts(name), categories(name), credit_cards(name)')
         .order('transaction_date', { ascending: false });
       if (error) throw error;
-      return data as (Transaction & { accounts: { name: string }; categories: { name: string } | null })[];
+      return data as (Transaction & { accounts: { name: string }; categories: { name: string } | null; credit_cards: { name: string } | null })[];
     },
   });
 }

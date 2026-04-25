@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { useTransactions, useAccounts, useCategories, useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from '../hooks/useSupabase';
+import { useTransactions, useAccounts, useCategories, useCreditCards, useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from '../hooks/useSupabase';
 import { formatCurrency, formatDate, formatTRY } from '../lib/utils';
 import { Plus, Trash2, Pencil, ArrowUpRight, ArrowDownRight, ArrowLeftRight, Filter, ChevronLeft, ChevronRight, CreditCard, Wallet, Landmark, Zap } from 'lucide-react';
 import Modal from '../components/Modal';
@@ -21,6 +21,7 @@ export default function Transactions() {
   const { data: transactions, isLoading } = useTransactions();
   const { data: accounts } = useAccounts();
   const { data: categories } = useCategories();
+  const { data: creditCards } = useCreditCards();
   const createTransaction = useCreateTransaction();
   const updateTransaction = useUpdateTransaction();
   const deleteTransaction = useDeleteTransaction();
@@ -40,6 +41,7 @@ export default function Transactions() {
     currency: 'TRY' as CurrencyCode,
     description: '',
     payment_method: 'other' as PaymentMethod,
+    credit_card_id: '',
     transaction_date: new Date().toISOString().split('T')[0],
   });
 
@@ -67,6 +69,7 @@ export default function Transactions() {
         currency: 'TRY',
         description: '',
         payment_method: 'other',
+        credit_card_id: '',
         transaction_date: new Date().toISOString().split('T')[0],
       });
     } catch (err: any) {
@@ -85,6 +88,7 @@ export default function Transactions() {
       currency: tx.currency,
       description: tx.description || '',
       payment_method: tx.payment_method || 'other',
+      credit_card_id: tx.credit_card_id || '',
       transaction_date: tx.transaction_date,
     });
     setModalOpen(true);
@@ -238,6 +242,12 @@ export default function Transactions() {
                     <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{tx.description || tx.accounts?.name}</p>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 mt-0.5 truncate">
                       <span className="truncate">{tx.accounts?.name}</span>
+                      {tx.credit_cards?.name && (
+                        <>
+                          <span className="shrink-0">•</span>
+                          <span className="truncate text-indigo-500 dark:text-indigo-400">{tx.credit_cards.name}</span>
+                        </>
+                      )}
                       <span className="shrink-0">•</span>
                       <span className="shrink-0">{formatDate(tx.transaction_date)}</span>
                     </div>
@@ -332,6 +342,22 @@ export default function Transactions() {
                 </button>
               ))}
             </div>
+            {form.payment_method === 'credit_card' && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Kredi Kartı</label>
+                <select
+                  value={form.credit_card_id}
+                  onChange={(e) => setForm({ ...form, credit_card_id: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  required={form.payment_method === 'credit_card'}
+                >
+                  <option value="">Kredi kartı seçin</option>
+                  {creditCards?.map((card) => (
+                    <option key={card.id} value={card.id}>{card.name} {card.card_last_four ? `(*${card.card_last_four})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div>

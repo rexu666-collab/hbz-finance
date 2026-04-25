@@ -225,3 +225,6 @@ EXCEPTION
   WHEN others THEN
     NULL;
 END $$;
+
+-- 4. Add credit_card_id column to transactions if missing
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS credit_card_id UUID REFERENCES credit_cards(id) ON DELETE SET NULL;

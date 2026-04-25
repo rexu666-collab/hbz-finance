@@ -33,6 +33,7 @@ export interface Transaction {
   currency: CurrencyCode;
   description: string;
   payment_method: PaymentMethod;
+  credit_card_id: string | null;
   transaction_date: string;
   created_at: string;
 }
