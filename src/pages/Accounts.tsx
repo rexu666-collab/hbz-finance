@@ -3,13 +3,89 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAccounts, useCreateAccount, useUpdateAccount, useDeleteAccount, useExchangeRates } from '../hooks/useSupabase';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Pencil, Trash2, Landmark } from 'lucide-react';
+import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
 import Modal from '../components/Modal';
 import type { CurrencyCode } from '../types';
 
 const CURRENCIES: CurrencyCode[] = ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY', 'XAU', 'XAG', 'CUM', 'YAR', 'TAM'];
 
-const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'];
+// Bank logo helpers (shared logic with CreditCards)
+const LOCAL_BANK_LOGOS: Record<string, string> = {
+  garanti: '/bank-logos/garanti.svg',
+  garantibbva: '/bank-logos/garanti.svg',
+  bbva: '/bank-logos/garanti.svg',
+  akbank: '/bank-logos/akbank.svg',
+  isbank: '/bank-logos/isbank.svg',
+  isbankasi: '/bank-logos/isbank.svg',
+  turkiyeisbankasi: '/bank-logos/isbank.svg',
+  ziraat: '/bank-logos/ziraat.svg',
+  ziraatbank: '/bank-logos/ziraat.svg',
+  ziraatbankasi: '/bank-logos/ziraat.svg',
+  halkbank: '/bank-logos/halkbank.svg',
+  teb: '/bank-logos/teb.svg',
+  turkekonomibankasi: '/bank-logos/teb.svg',
+  ing: '/bank-logos/ing.svg',
+  ingbank: '/bank-logos/ing.svg',
+  enpara: '/bank-logos/enpara.png',
+  enparacom: '/bank-logos/enpara.png',
+};
+
+function getBankLogoPath(name: string): string | null {
+  const n = name.toLowerCase().replace(/[^a-zğüşıöç]/gi, '');
+  for (const slug in LOCAL_BANK_LOGOS) {
+    if (n.includes(slug)) return LOCAL_BANK_LOGOS[slug];
+  }
+  return null;
+}
+
+function getBankColor(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('garanti')) return '#F47920';
+  if (n.includes('akbank')) return '#E30613';
+  if (n.includes('is') && (n.includes('bank') || n.includes('bankasi'))) return '#633588';
+  if (n.includes('ziraat')) return '#CC0000';
+  if (n.includes('halkbank')) return '#FF6600';
+  if (n.includes('yapikredi') || n.includes('ykb')) return '#0047AB';
+  if (n.includes('vakif')) return '#FFD700';
+  if (n.includes('ing')) return '#FF6200';
+  if (n.includes('qnb') || n.includes('finansbank')) return '#00A9E0';
+  if (n.includes('deniz')) return '#0088CC';
+  if (n.includes('teb')) return '#003399';
+  if (n.includes('fibabanka') || n.includes('fiba')) return '#0055A4';
+  if (n.includes('hsbc')) return '#DB0011';
+  if (n.includes('enpara')) return '#00C853';
+  if (n.includes('odeabank') || n.includes('odea')) return '#6B2D5C';
+  return '#2563eb';
+}
+
+function BankLogo({ bankName }: { bankName: string }) {
+  const [error, setError] = useState(false);
+  const path = getBankLogoPath(bankName);
+
+  if (path && !error) {
+    return (
+      <img
+        src={path}
+        alt={bankName}
+        className="w-12 h-12 object-contain rounded-lg bg-white dark:bg-white p-0.5 shadow-lg shrink-0"
+        onError={() => setError(true)}
+        loading="lazy"
+      />
+    );
+  }
+
+  const color = getBankColor(bankName);
+  const initial = bankName.charAt(0).toUpperCase();
+  return (
+    <div
+      className="w-12 h-12 rounded-lg flex items-center justify-center shadow-lg shrink-0"
+      style={{ backgroundColor: color, color: '#fff' }}
+      title={bankName}
+    >
+      <span className="text-lg font-bold">{initial}</span>
+    </div>
+  );
+}
 
 export default function Accounts() {
   const { user } = useAuth();
@@ -48,11 +124,13 @@ export default function Accounts() {
       return;
     }
     try {
+      const autoColor = getBankColor(form.name);
       const data = { 
         ...form, 
         user_id: user.id,
         initial_balance: form.balance,
-        balance: form.balance
+        balance: form.balance,
+        color: autoColor,
       };
       
       if (editingAccount) {
@@ -131,12 +209,7 @@ export default function Accounts() {
             <div key={account.id} className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm card-hover group">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-lg"
-                    style={{ backgroundColor: account.color || '#2563eb' }}
-                  >
-                    <Landmark size={18} />
-                  </div>
+                  <BankLogo bankName={account.name} />
                   <div>
                     <h3 className="font-semibold text-gray-800 dark:text-white">{account.name}</h3>
                     <p className="text-xs text-gray-500 dark:text-slate-400">Banka Hesabı</p>
@@ -175,7 +248,7 @@ export default function Accounts() {
 
       {accounts?.length === 0 && (
         <div className="text-center py-16 bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
-          <Landmark size={48} className="mx-auto text-gray-300 dark:text-slate-600 mb-4" />
+          <CreditCard size={48} className="mx-auto text-gray-300 dark:text-slate-600 mb-4" />
           <p className="text-gray-500 dark:text-slate-400">Henüz hesap eklemediniz</p>
           <button onClick={() => setModalOpen(true)} className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium">
             İlk Hesabınızı Ekleyin
@@ -224,21 +297,6 @@ export default function Accounts() {
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 required
               />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Renk</label>
-            <div className="flex gap-2 flex-wrap">
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setForm({ ...form, color })}
-                  className={`w-8 h-8 rounded-full transition-transform ${form.color === color ? 'scale-125 ring-2 ring-offset-2 ring-gray-400 dark:ring-gray-600' : ''}`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
             </div>
           </div>
 
