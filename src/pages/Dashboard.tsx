@@ -77,7 +77,7 @@ export default function Dashboard() {
       data.push({ name: 'K.K. Borç', value: creditCardDebt });
     }
     
-    return data;
+    return data.sort((a, b) => b.value - a.value);
   };
 
   const pieData = getPieData();
