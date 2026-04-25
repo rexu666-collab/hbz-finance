@@ -3,8 +3,78 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useCreditCards, useCreateCreditCard, useUpdateCreditCard, useDeleteCreditCard } from '../hooks/useSupabase';
 import { formatTRY } from '../lib/utils';
-import { Plus, Pencil, Trash2, CreditCard as CreditCardIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, CreditCard } from 'lucide-react';
 import Modal from '../components/Modal';
+
+// Bank brand colors & initials for automatic recognition
+function getBankMeta(name: string) {
+  const n = name.toLowerCase();
+  const map: Record<string, { color: string; text: string; initial: string }> = {
+    garanti: { color: '#F47920', text: '#fff', initial: 'G' },
+    garantibbva: { color: '#F47920', text: '#fff', initial: 'G' },
+    enpara: { color: '#00C853', text: '#fff', initial: 'E' },
+    akbank: { color: '#E30613', text: '#fff', initial: 'A' },
+    ziraat: { color: '#CC0000', text: '#fff', initial: 'Z' },
+    ziraatbank: { color: '#CC0000', text: '#fff', initial: 'Z' },
+    isbank: { color: '#633588', text: '#fff', initial: 'İ' },
+    isbankasi: { color: '#633588', text: '#fff', initial: 'İ' },
+    isb: { color: '#633588', text: '#fff', initial: 'İ' },
+    ykb: { color: '#0047AB', text: '#fff', initial: 'Y' },
+    yapikredi: { color: '#0047AB', text: '#fff', initial: 'Y' },
+    halkbank: { color: '#FF6600', text: '#fff', initial: 'H' },
+    vakifbank: { color: '#FFD700', text: '#1a1a1a', initial: 'V' },
+    fibabanka: { color: '#0055A4', text: '#fff', initial: 'F' },
+    finansbank: { color: '#00A9E0', text: '#fff', initial: 'Q' },
+    qnb: { color: '#00A9E0', text: '#fff', initial: 'Q' },
+    ing: { color: '#FF6200', text: '#fff', initial: 'I' },
+    teb: { color: '#003399', text: '#fff', initial: 'T' },
+    denizbank: { color: '#0088CC', text: '#fff', initial: 'D' },
+    odea: { color: '#6B2D5C', text: '#fff', initial: 'O' },
+    burgan: { color: '#8B0000', text: '#fff', initial: 'B' },
+    hsbc: { color: '#DB0011', text: '#fff', initial: 'H' },
+    citibank: { color: '#003B70', text: '#fff', initial: 'C' },
+    ptt: { color: '#FFC107', text: '#1a1a1a', initial: 'P' },
+    aktifbank: { color: '#C8102E', text: '#fff', initial: 'A' },
+    albaraka: { color: '#1B5E20', text: '#fff', initial: 'A' },
+    kuveyt: { color: '#0066B3', text: '#fff', initial: 'K' },
+    turkishbank: { color: '#C41E3A', text: '#fff', initial: 'T' },
+    alternatif: { color: '#004D40', text: '#fff', initial: 'A' },
+    anadolubank: { color: '#003087', text: '#fff', initial: 'A' },
+    ccf: { color: '#004D99', text: '#fff', initial: 'C' },
+    fortis: { color: '#0055A4', text: '#fff', initial: 'F' },
+    mufg: { color: '#CC0000', text: '#fff', initial: 'M' },
+    nurol: { color: '#1B5E20', text: '#fff', initial: 'N' },
+    rabobank: { color: '#FF6600', text: '#fff', initial: 'R' },
+    sekerbank: { color: '#009639', text: '#fff', initial: 'Ş' },
+    sinop: { color: '#0066CC', text: '#fff', initial: 'S' },
+    tekstil: { color: '#CC0000', text: '#fff', initial: 'T' },
+    turkiyefinans: { color: '#006633', text: '#fff', initial: 'T' },
+    verus: { color: '#003366', text: '#fff', initial: 'V' },
+    yapi: { color: '#0047AB', text: '#fff', initial: 'Y' },
+  };
+
+  for (const key in map) {
+    if (n.includes(key)) return map[key];
+  }
+  return null;
+}
+
+function BankLogo({ bankName, fallbackColor }: { bankName: string; fallbackColor: string }) {
+  const meta = getBankMeta(bankName);
+  const bg = meta?.color || fallbackColor;
+  const fg = meta?.text || '#fff';
+  const initial = meta?.initial || bankName.charAt(0).toUpperCase();
+
+  return (
+    <div
+      className="w-11 h-11 rounded-xl flex items-center justify-center shadow-lg shrink-0"
+      style={{ backgroundColor: bg, color: fg }}
+      title={bankName}
+    >
+      <span className="text-base font-bold">{initial}</span>
+    </div>
+  );
+}
 
 const COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899'];
 
@@ -148,12 +218,7 @@ export default function CreditCards() {
             <div key={card.id} className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-5 border border-gray-300 dark:border-slate-700 shadow-sm card-hover group">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-lg"
-                    style={{ backgroundColor: card.color || '#ef4444' }}
-                  >
-                    <CreditCardIcon size={18} />
-                  </div>
+                  <BankLogo bankName={card.bank_name || card.name} fallbackColor={card.color || '#ef4444'} />
                   <div>
                     <h3 className="font-semibold text-gray-800 dark:text-white">{card.name}</h3>
                     <p className="text-xs text-gray-500 dark:text-slate-400">
@@ -227,7 +292,7 @@ export default function CreditCards() {
 
       {cards?.length === 0 && (
         <div className="text-center py-16 bg-gray-100 dark:bg-slate-800 rounded-2xl border border-gray-300 dark:border-slate-700 border-dashed">
-          <CreditCardIcon size={48} className="mx-auto text-gray-300 dark:text-slate-600 mb-4" />
+          <CreditCard size={48} className="mx-auto text-gray-300 dark:text-slate-600 mb-4" />
           <p className="text-gray-500 dark:text-slate-400">Henüz kredi kartı eklemediniz</p>
           <button onClick={() => setModalOpen(true)} className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium">
             İlk Kartınızı Ekleyin
