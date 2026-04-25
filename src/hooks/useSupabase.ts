@@ -72,14 +72,25 @@ export function useCreateTransaction() {
       const { data: txData, error: txError } = await supabase.from('transactions').insert(transaction as any).select().single();
       if (txError) throw txError;
       
-      // Update account balance
-      const { data: account } = await supabase.from('accounts').select('balance').eq('id', transaction.account_id).single();
-      if (account) {
-        const delta = transaction.type === 'income' ? transaction.amount : transaction.type === 'expense' ? -transaction.amount : 0;
-        const newBalance = (account.balance || 0) + delta;
-        await supabase.from('accounts').update({ balance: newBalance }).eq('id', transaction.account_id);
+      // Update account balance (only if account_id exists)
+      if (transaction.account_id) {
+        const { data: account } = await supabase.from('accounts').select('balance').eq('id', transaction.account_id).single();
+        if (account) {
+          const delta = transaction.type === 'income' ? transaction.amount : transaction.type === 'expense' ? -transaction.amount : 0;
+          const newBalance = (account.balance || 0) + delta;
+          await supabase.from('accounts').update({ balance: newBalance }).eq('id', transaction.account_id);
+        }
       }
-      
+
+      // Update credit card debt (if credit_card_id exists and it's an expense)
+      if (transaction.credit_card_id && transaction.type === 'expense') {
+        const { data: card } = await supabase.from('credit_cards').select('current_debt').eq('id', transaction.credit_card_id).single();
+        if (card) {
+          const newDebt = (card.current_debt || 0) + transaction.amount;
+          await supabase.from('credit_cards').update({ current_debt: newDebt }).eq('id', transaction.credit_card_id);
+        }
+      }
+
       return txData;
     },
     onSuccess: () => {

@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS transactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  account_id UUID REFERENCES accounts(id) ON DELETE CASCADE NOT NULL,
+  account_id UUID REFERENCES accounts(id) ON DELETE SET NULL,
   type TEXT NOT NULL CHECK (type IN ('income', 'expense', 'transfer')),
   category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
   amount DECIMAL(15,2) NOT NULL DEFAULT 0,

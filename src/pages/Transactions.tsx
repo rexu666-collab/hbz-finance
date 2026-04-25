@@ -52,11 +52,16 @@ export default function Transactions() {
       return;
     }
     try {
+      const payload = {
+        ...form,
+        account_id: form.account_id || null,
+        credit_card_id: form.credit_card_id || null,
+      };
       if (editingTx) {
-        await updateTransaction.mutateAsync({ id: editingTx.id, ...form });
+        await updateTransaction.mutateAsync({ id: editingTx.id, ...payload });
         addToast('İşlem güncellendi!', 'success');
       } else {
-        await createTransaction.mutateAsync({ ...form, user_id: user.id });
+        await createTransaction.mutateAsync({ ...payload, user_id: user.id });
         addToast('İşlem eklendi!', 'success');
       }
       setModalOpen(false);
@@ -241,10 +246,10 @@ export default function Transactions() {
                   <div className="min-w-0">
                     <p className="font-medium text-sm text-gray-800 dark:text-white truncate">{tx.description || tx.accounts?.name}</p>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400 mt-0.5 truncate">
-                      <span className="truncate">{tx.accounts?.name}</span>
+                      {tx.accounts?.name && <span className="truncate">{tx.accounts.name}</span>}
                       {tx.credit_cards?.name && (
                         <>
-                          <span className="shrink-0">•</span>
+                          {tx.accounts?.name && <span className="shrink-0">•</span>}
                           <span className="truncate text-indigo-500 dark:text-indigo-400">{tx.credit_cards.name}</span>
                         </>
                       )}
@@ -308,20 +313,22 @@ export default function Transactions() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Hesap</label>
-            <select
-              value={form.account_id}
-              onChange={(e) => setForm({ ...form, account_id: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
-              required
-            >
-              <option value="">Hesap seçin</option>
-              {accounts?.map((acc) => (
-                <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
-              ))}
-            </select>
-          </div>
+          {form.payment_method !== 'credit_card' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Hesap</label>
+              <select
+                value={form.account_id}
+                onChange={(e) => setForm({ ...form, account_id: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                required
+              >
+                <option value="">Hesap seçin</option>
+                {accounts?.map((acc) => (
+                  <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5">Ödeme Yöntemi</label>

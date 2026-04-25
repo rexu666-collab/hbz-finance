@@ -26,7 +26,7 @@ export interface Account {
 export interface Transaction {
   id: string;
   user_id: string;
-  account_id: string;
+  account_id: string | null;
   type: TransactionType;
   category_id: string | null;
   amount: number;
