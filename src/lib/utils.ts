@@ -7,21 +7,21 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: number, currency: string = 'TRY'): string {
   const symbol = currency === 'TRY' ? '₺' : currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency;
-  // Show exact value without rounding - preserve all decimals
+  // Display with 2 decimals for clean UI; calculations remain exact elsewhere
   const formatted = new Intl.NumberFormat('tr-TR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 20,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
   return `${symbol}${formatted}`;
 }
 
 export function formatTRY(amount: number): string {
-  // Show exact value without rounding - preserve all decimals
+  // Display with 2 decimals for clean UI; calculations remain exact elsewhere
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
     currency: 'TRY',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 20,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
