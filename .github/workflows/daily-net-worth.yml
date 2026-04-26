@@ -1,0 +1,20 @@
+name: Daily Net Worth Snapshot
+
+on:
+  schedule:
+    # Run daily at 16:00 UTC (19:00 Turkey time)
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger Vercel Edge Function
+        run: |
+          curl -s "https://hbz-finance.vercel.app/api/daily-net-worth${{ secrets.CRON_SECRET && '?secret=' }}${{ secrets.CRON_SECRET }}" \
+            -X GET \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP Status: %{http_code}\n"

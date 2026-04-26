@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccounts, useTransactions, useUserFunds, useExchangeRates, useCreditCards } from '../hooks/useSupabase';
+import { useAccounts, useTransactions, useUserFunds, useExchangeRates, useCreditCards, useNetWorthHistory } from '../hooks/useSupabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatTRY, formatCurrency } from '../lib/utils';
@@ -27,6 +27,7 @@ export default function Dashboard() {
   const { data: userFunds, isLoading: fundsLoading } = useUserFunds();
   const { data: creditCards, isLoading: cardsLoading } = useCreditCards();
   const { data: exchangeRates, refetch: refetchRates, isFetching: ratesFetching } = useExchangeRates();
+  const { data: netWorthHistory } = useNetWorthHistory();
 
   // BIST 100 data from Yahoo Finance
   const [bistData, setBistData] = useState<{ price: number; change: number } | null>(null);
@@ -99,20 +100,23 @@ export default function Dashboard() {
 
   const pieData = getPieData();
 
-  // Returns calculation
-  const getPeriodReturn = (days: number) => {
+  // Returns calculation from net worth history
+  const getReturn = (days: number) => {
+    if (!netWorthHistory || netWorthHistory.length < 2) return 0;
+    const sorted = [...netWorthHistory].sort((a, b) => new Date(a.record_date).getTime() - new Date(b.record_date).getTime());
+    const now = new Date();
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    const periodTx = transactions?.filter(tx => new Date(tx.transaction_date) >= cutoff) || [];
-    const income = periodTx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
-    const expense = periodTx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
-    return income - expense;
+    cutoff.setDate(now.getDate() - days);
+    const past = sorted.filter(h => new Date(h.record_date) <= cutoff).pop();
+    const latest = sorted[sorted.length - 1];
+    if (!past || !latest || past.total_try === 0) return 0;
+    return ((latest.total_try - past.total_try) / past.total_try) * 100;
   };
 
-  const dailyReturn = getPeriodReturn(1);
-  const weeklyReturn = getPeriodReturn(7);
-  const monthlyReturn = getPeriodReturn(30);
-  const yearlyReturn = getPeriodReturn(365);
+  const dailyReturn = getReturn(1);
+  const weeklyReturn = getReturn(7);
+  const monthlyReturn = getReturn(30);
+  const yearlyReturn = getReturn(365);
 
   // Category spending analysis
   const categoryData = transactions
@@ -297,7 +301,7 @@ export default function Dashboard() {
             <div key={item.label} className="flex-1 px-3 py-2.5 text-center">
               <span className="text-[10px] text-gray-500 dark:text-slate-400 uppercase tracking-wider block leading-tight">{item.label}</span>
               <span className={`text-sm font-bold ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                <Mask>{isPositive ? '+' : ''}{formatTRY(item.value)}</Mask>
+                <Mask>{isPositive ? '+' : ''}{item.value.toFixed(2)}%</Mask>
               </span>
             </div>
           );

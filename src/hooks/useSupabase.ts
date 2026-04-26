@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import type { Account, Transaction, Category, Fund, UserFund, ExchangeRate, CreditCard, Note } from '../types';
+import type { Account, Transaction, Category, Fund, UserFund, ExchangeRate, CreditCard, Note, NetWorthHistory } from '../types';
 
 export function useAccounts() {
   return useQuery({
@@ -413,6 +413,20 @@ export function useDeleteCreditCard() {
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['credit_cards'] }),
+  });
+}
+
+export function useNetWorthHistory() {
+  return useQuery({
+    queryKey: ['net_worth_history'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('net_worth_history')
+        .select('*')
+        .order('record_date', { ascending: true });
+      if (error) throw error;
+      return data as NetWorthHistory[];
+    },
   });
 }
 
