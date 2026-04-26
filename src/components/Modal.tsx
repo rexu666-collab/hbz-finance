@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   isOpen: boolean;
@@ -27,12 +28,12 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     lg: 'max-w-2xl',
   };
 
-  return (
-    <>
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="fixed inset-0 z-50 bg-black/60" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       {/* Modal box */}
-      <div className={`fixed z-50 top-[5dvh] left-1/2 -translate-x-1/2 w-[92vw] ${sizeClasses[size]} max-h-[90dvh] flex flex-col bg-gray-100 dark:bg-slate-800 rounded-2xl shadow-2xl`}>
+      <div className={`relative w-full ${sizeClasses[size]} max-h-[85dvh] flex flex-col bg-gray-100 dark:bg-slate-800 rounded-2xl shadow-2xl`}>
         <div className="flex items-center justify-between px-3 py-2.5 sm:p-4 border-b border-gray-300 dark:border-slate-700 shrink-0">
           <h2 className="text-sm sm:text-base font-semibold truncate pr-4">{title}</h2>
           <button
@@ -46,6 +47,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
           {children}
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 }
