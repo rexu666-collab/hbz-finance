@@ -10,7 +10,7 @@ import {
   Landmark, ArrowUpRight, ArrowDownRight, Activity,
   Coins, Gem,
   DollarSign, Euro, PoundSterling, Gem as GemIcon, CreditCard as CreditCardIcon,
-  CreditCard
+  CreditCard, RefreshCw
 } from 'lucide-react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip
@@ -25,7 +25,7 @@ export default function Dashboard() {
   const { data: transactions, isLoading: txLoading } = useTransactions();
   const { data: userFunds, isLoading: fundsLoading } = useUserFunds();
   const { data: creditCards, isLoading: cardsLoading } = useCreditCards();
-  const { data: exchangeRates } = useExchangeRates();
+  const { data: exchangeRates, refetch: refetchRates, isFetching: ratesFetching } = useExchangeRates();
 
   const getRate = (currency: CurrencyCode) => {
     if (currency === 'TRY') return 1;
@@ -292,7 +292,7 @@ export default function Dashboard() {
 
       {/* Exchange Rates Ticker */}
       {majorRates.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto pb-1">
+        <div className="flex gap-3 overflow-x-auto pb-1 items-center">
           {majorRates.map((rate) => (
             <div 
               key={rate.currency_code}
@@ -304,6 +304,14 @@ export default function Dashboard() {
               <span className="text-xs text-gray-400">₺</span>
             </div>
           ))}
+          <button
+            onClick={() => refetchRates()}
+            disabled={ratesFetching}
+            className="shrink-0 p-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50"
+            title="Kurları yenile"
+          >
+            <RefreshCw size={16} className={ratesFetching ? 'animate-spin' : ''} />
+          </button>
         </div>
       )}
 
