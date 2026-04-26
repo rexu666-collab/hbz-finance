@@ -28,9 +28,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start pt-4 sm:pt-12 justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className={`relative bg-gray-100 dark:bg-slate-800 rounded-t-2xl sm:rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[85dvh] sm:max-h-[90vh] overflow-y-auto`}>
+      <div className={`relative bg-gray-100 dark:bg-slate-800 rounded-t-2xl sm:rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between px-3 py-2.5 sm:p-4 border-b border-gray-300 dark:border-slate-700 sticky top-0 bg-gray-100 dark:bg-slate-800 z-10">
           <h2 className="text-sm sm:text-base font-semibold truncate pr-4">{title}</h2>
           <button
