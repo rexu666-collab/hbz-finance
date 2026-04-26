@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -10,9 +10,12 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      contentRef.current?.scrollTo({ top: 0 });
     } else {
       document.body.style.overflow = '';
     }
@@ -28,9 +31,12 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className={`relative bg-gray-100 dark:bg-slate-800 rounded-2xl shadow-xl w-full ${sizeClasses[size]} max-h-[90dvh] overflow-y-auto`}>
+      <div
+        ref={contentRef}
+        className={`relative bg-gray-100 dark:bg-slate-800 rounded-2xl shadow-xl w-full ${sizeClasses[size]} max-h-[90dvh] overflow-y-auto my-auto`}
+      >
         <div className="flex items-center justify-between px-3 py-2.5 sm:p-4 border-b border-gray-300 dark:border-slate-700 sticky top-0 bg-gray-100 dark:bg-slate-800 z-10">
           <h2 className="text-sm sm:text-base font-semibold truncate pr-4">{title}</h2>
           <button
