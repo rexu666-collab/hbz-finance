@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAccounts, useTransactions, useUserFunds, useExchangeRates, useCreditCards } from '../hooks/useSupabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +27,24 @@ export default function Dashboard() {
   const { data: userFunds, isLoading: fundsLoading } = useUserFunds();
   const { data: creditCards, isLoading: cardsLoading } = useCreditCards();
   const { data: exchangeRates, refetch: refetchRates, isFetching: ratesFetching } = useExchangeRates();
+
+  // BIST 100 data from Yahoo Finance
+  const [bistData, setBistData] = useState<{ price: number; change: number } | null>(null);
+  useEffect(() => {
+    fetch('https://query1.finance.yahoo.com/v8/finance/chart/XU100.IS?interval=1d&range=2d')
+      .then(r => r.json())
+      .then(data => {
+        const result = data.chart?.result?.[0];
+        if (result) {
+          const meta = result.meta;
+          const price = meta.regularMarketPrice;
+          const prevClose = meta.previousClose || meta.chartPreviousClose;
+          const change = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
+          setBistData({ price, change });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const getRate = (currency: CurrencyCode) => {
     if (currency === 'TRY') return 1;
@@ -304,8 +323,18 @@ export default function Dashboard() {
               <span className="text-xs text-gray-400">₺</span>
             </div>
           ))}
+          {bistData && (
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 whitespace-nowrap">
+              <span className="text-indigo-500"><TrendingUp size={14} /></span>
+              <span className="text-xs font-bold text-gray-500 dark:text-slate-400">BIST 100</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-white">{bistData.price.toFixed(2)}</span>
+              <span className={`text-[10px] font-bold ${bistData.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                {bistData.change >= 0 ? '+' : ''}{bistData.change.toFixed(2)}%
+              </span>
+            </div>
+          )}
           <button
-            onClick={() => refetchRates()}
+            onClick={() => { refetchRates(); /* also re-fetch BIST */ fetch('https://query1.finance.yahoo.com/v8/finance/chart/XU100.IS?interval=1d&range=2d').then(r => r.json()).then(data => { const result = data.chart?.result?.[0]; if (result) { const meta = result.meta; const price = meta.regularMarketPrice; const prevClose = meta.previousClose || meta.chartPreviousClose; const change = prevClose ? ((price - prevClose) / prevClose) * 100 : 0; setBistData({ price, change }); } }).catch(() => {}); }}
             disabled={ratesFetching}
             className="shrink-0 p-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50"
             title="Kurları yenile"
