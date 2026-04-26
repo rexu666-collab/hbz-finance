@@ -31,16 +31,11 @@ export default function Dashboard() {
   // BIST 100 data from Yahoo Finance
   const [bistData, setBistData] = useState<{ price: number; change: number } | null>(null);
   useEffect(() => {
-    fetch('https://query1.finance.yahoo.com/v8/finance/chart/XU100.IS?interval=1d&range=2d')
+    fetch('/api/bist100')
       .then(r => r.json())
       .then(data => {
-        const result = data.chart?.result?.[0];
-        if (result) {
-          const meta = result.meta;
-          const price = meta.regularMarketPrice;
-          const prevClose = meta.previousClose || meta.chartPreviousClose;
-          const change = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
-          setBistData({ price, change });
+        if (data.price) {
+          setBistData({ price: data.price, change: data.change });
         }
       })
       .catch(() => {});
@@ -334,7 +329,7 @@ export default function Dashboard() {
             </div>
           )}
           <button
-            onClick={() => { refetchRates(); /* also re-fetch BIST */ fetch('https://query1.finance.yahoo.com/v8/finance/chart/XU100.IS?interval=1d&range=2d').then(r => r.json()).then(data => { const result = data.chart?.result?.[0]; if (result) { const meta = result.meta; const price = meta.regularMarketPrice; const prevClose = meta.previousClose || meta.chartPreviousClose; const change = prevClose ? ((price - prevClose) / prevClose) * 100 : 0; setBistData({ price, change }); } }).catch(() => {}); }}
+            onClick={() => { refetchRates(); fetch('/api/bist100').then(r => r.json()).then(data => { if (data.price) setBistData({ price: data.price, change: data.change }); }).catch(() => {}); }}
             disabled={ratesFetching}
             className="shrink-0 p-2.5 rounded-xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50"
             title="Kurları yenile"
